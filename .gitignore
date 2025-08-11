@@ -480,8 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
-/BudgetTracker.sln
-/BudgetTracker.Application/obj/
 _ReSharper.*
 bin
 obj
