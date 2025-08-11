@@ -3,7 +3,11 @@
 
 # dotenv files
 .env
-
+*.swp
+_ReSharper.*
+bin
+obj
+packages
 # User-specific files
 *.rsuser
 *.suo
