@@ -64,20 +64,5 @@ public class UserController : ControllerBase
         return Ok(await _userService.GetUserTagsAsync(UserId.Value, cancellation));
     }
 
-    [HttpPost("import-csv")]
-    public async Task<IActionResult> ImportFromCsvAsync(IFormFile csv,[FromForm] ImportTransactionRequest request, CancellationToken cancellation)
-    {
-        if (csv.Length > 5 * 1024 * 1024)
-        {
-            return BadRequest("File is too large");
-        }
 
-        if (!csv.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Invalid file type. Only .csv is supported.");
-        
-        if (UserId is null) return Unauthorized();
-        
-        await using var stream = csv.OpenReadStream();
-        return Ok(await _transactionImportService.ImportFromCsvAsync(stream, UserId.Value,request, cancellation));
-    }
 }

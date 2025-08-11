@@ -80,11 +80,5 @@ public class TransactionController : ControllerBase
         return Ok();
     }
     
-    [HttpPost("upload")]
-    public async Task<IActionResult> UploadAsync(IEnumerable<CreateTransaction> request, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        await _transactionService.UploadMassTransactionsAsync(UserId.Value, request, cancellation);
-        return Ok();
-    }
+
 }
