@@ -10,7 +10,7 @@ namespace BudgetTracker.Infrastructure.Services;
 
 public class TransactionImportService : ITransactionImportService
 {
-    public async Task<TransactionImportResult> ImportFromCsvAsync(Stream csvStream, Guid userId, CancellationToken cancellation)
+    public async Task<TransactionImportResult> ImportFromCsvAsync(Stream csvStream, Guid userId,ImportTransactionRequest request, CancellationToken cancellation)
     {
         var failedLines = new List<string>();
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -29,8 +29,11 @@ public class TransactionImportService : ITransactionImportService
         };
         using var streamReader = new StreamReader(csvStream);
         using var csvReader = new CsvReader(streamReader, config);
-        var csvMap = new TransactionCsvImportMap(0,3,2,1);
-        csvReader.Context.RegisterClassMap(csvMap);
+        if (!request.IsFirstRowHeaders)
+        {
+            var csvMap = new TransactionCsvImportMap(request.NameIndex,request.DateIndex,request.AmountIndex,request.DescriptionIndex);
+            csvReader.Context.RegisterClassMap(csvMap);
+        }
         var record =  csvReader.GetRecordsAsync<TransactionCsvImport>(cancellation);
         var parsedTransactions = new List<ParsedTransactionResult>();
         await foreach (var rec in record)

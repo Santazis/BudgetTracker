@@ -17,3 +17,4 @@ E:\Rider\BudgetTracker\BudgetTracker.Infrastructure\obj\Debug\net9.0\BudgetTrack
 E:\Rider\BudgetTracker\BudgetTracker.Infrastructure\obj\Debug\net9.0\ref\BudgetTracker.Infrastructure.dll
 E:\Rider\BudgetTracker\BudgetTracker.Infrastructure\bin\Debug\net9.0\BudgetTracker.Application.dll
 E:\Rider\BudgetTracker\BudgetTracker.Infrastructure\bin\Debug\net9.0\BudgetTracker.Application.pdb
+E:\Rider\BudgetTracker\BudgetTracker.Infrastructure\obj\Debug\net9.0\BudgetTracker.Infrastructure.sourcelink.json

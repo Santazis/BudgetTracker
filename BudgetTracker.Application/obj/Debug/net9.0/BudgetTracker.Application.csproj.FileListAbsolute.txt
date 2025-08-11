@@ -13,3 +13,4 @@ E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.
 E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\refint\BudgetTracker.Application.dll
 E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.pdb
 E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\ref\BudgetTracker.Application.dll
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.sourcelink.json

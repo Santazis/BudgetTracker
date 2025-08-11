@@ -65,7 +65,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("import-csv")]
-    public async Task<IActionResult> ImportFromCsvAsync(IFormFile csv, CancellationToken cancellation)
+    public async Task<IActionResult> ImportFromCsvAsync(IFormFile csv,[FromForm] ImportTransactionRequest request, CancellationToken cancellation)
     {
         if (csv.Length > 5 * 1024 * 1024)
         {
@@ -78,6 +78,6 @@ public class UserController : ControllerBase
         if (UserId is null) return Unauthorized();
         
         await using var stream = csv.OpenReadStream();
-        return Ok(await _transactionImportService.ImportFromCsvAsync(stream, UserId.Value, cancellation));
+        return Ok(await _transactionImportService.ImportFromCsvAsync(stream, UserId.Value,request, cancellation));
     }
 }
