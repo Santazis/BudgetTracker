@@ -482,3 +482,7 @@ $RECYCLE.BIN/
 *.swp
 /BudgetTracker.sln
 /BudgetTracker.Application/obj/
+_ReSharper.*
+bin
+obj
+packages
