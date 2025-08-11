@@ -1,0 +1,73 @@
+﻿using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Models.User;
+using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Domain.Common.Exceptions;
+using BudgetTracker.Domain.Models.Transaction;
+using BudgetTracker.Domain.Repositories;
+
+namespace BudgetTracker.Application.Services.User;
+
+public class UserService : IUserService
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITagRepository _tagRepository;
+    public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, ITagRepository tagRepository)
+    {
+        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
+        _tagRepository = tagRepository;
+    }
+
+    public async Task<UserDto> GetByIdAsync(Guid userId, CancellationToken cancellation)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellation);
+        if (user is null)
+        {
+            throw new RequestException("User not found");
+        }
+        
+        return UserDto.FromEntity(user);
+    }
+
+    public async Task AddPaymentMethod(Guid userId, CreatePaymentMethod request, CancellationToken cancellation)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellation);
+        if (user is null)
+        {
+            throw new RequestException("User not found");
+        }
+
+        user.AddPaymentMethod(request.Type, request.Name, request.Details);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
+
+    public async Task DeletePaymentMethodAsync(Guid userId, Guid paymentMethodId, CancellationToken cancellation)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellation);
+        if (user is null)
+        {
+            throw new RequestException("User not found");
+        }
+        user.DeletePaymentMethod(paymentMethodId);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
+
+    public async Task UpdatePaymentMethodAsync(Guid userId, Guid paymentMethodId, UpdatePaymentMethod request,
+        CancellationToken cancellation)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellation);
+        if (user is null)
+        {
+            throw new RequestException("User not found");
+        }
+        user.UpdatePaymentMethod(paymentMethodId,request.Name,request.Details,request.Type);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
+
+    public async Task<IEnumerable<Tag>> GetUserTagsAsync(Guid userId, CancellationToken cancellation)
+    {
+        var tags = await _tagRepository.GetUserTagsAsync(userId,cancellation);
+        return tags;
+    }
+}

@@ -1,0 +1,15 @@
+E:\Rider\BudgetTracker\BudgetTracker.Application\bin\Debug\net9.0\BudgetTracker.Application.deps.json
+E:\Rider\BudgetTracker\BudgetTracker.Application\bin\Debug\net9.0\BudgetTracker.Application.dll
+E:\Rider\BudgetTracker\BudgetTracker.Application\bin\Debug\net9.0\BudgetTracker.Application.pdb
+E:\Rider\BudgetTracker\BudgetTracker.Application\bin\Debug\net9.0\BudgetTracker.Domain.dll
+E:\Rider\BudgetTracker\BudgetTracker.Application\bin\Debug\net9.0\BudgetTracker.Domain.pdb
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.csproj.AssemblyReference.cache
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.GeneratedMSBuildEditorConfig.editorconfig
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.AssemblyInfoInputs.cache
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.AssemblyInfo.cs
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.csproj.CoreCompileInputs.cache
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTr.359E2BA9.Up2Date
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.dll
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\refint\BudgetTracker.Application.dll
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\BudgetTracker.Application.pdb
+E:\Rider\BudgetTracker\BudgetTracker.Application\obj\Debug\net9.0\ref\BudgetTracker.Application.dll
