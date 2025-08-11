@@ -23,7 +23,17 @@ public static class TransactionFilterExtension
         if (filter.To.HasValue)
         {
 
-            query = query.Where(t=> t.CreatedAt < filter.To.Value);
+            query = query.Where(t=> t.CreatedAt <= filter.To.Value);
+        }
+
+        if (filter.Tags is not null && filter.Tags.Count > 0)
+        {
+            query = query.Where(t => t.TransactionTags.Any(tt => filter.Tags.Contains(tt.TagId)));
+        }
+
+        if (filter.PaymentMethods is not null && filter.PaymentMethods.Count > 0)
+        {
+            query = query.Where(t => t.PaymentMethodId != null && filter.PaymentMethods.Contains(t.PaymentMethodId.Value));
         }
         return query;
     }

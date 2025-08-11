@@ -40,6 +40,7 @@ builder.Services.AddAuthentication(options =>
     ClockSkew = TimeSpan.Zero,
   };
 });
+builder.Services.AddDomainServices();
 builder.Services.AddRepositories();
 builder.Services.AddAuthServices();
 builder.Services.AddCrudServices();

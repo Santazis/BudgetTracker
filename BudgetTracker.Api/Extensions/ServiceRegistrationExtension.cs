@@ -7,6 +7,7 @@ using BudgetTracker.Application.Services.Auth;
 using BudgetTracker.Application.Services.CategoryServices;
 using BudgetTracker.Application.Services.TransactionServices;
 using BudgetTracker.Application.Services.User;
+using BudgetTracker.Domain.DomainServices;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Infrastructure.Repositories;
 using BudgetTracker.Infrastructure.Services;
@@ -35,9 +36,15 @@ public static class ServiceRegistrationExtension
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IBudgetRepository, BudgetRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IRecurringTransactionRepository,RecurringTransactionRepository>();
         return services;
     }
 
+    public static IServiceCollection AddDomainServices(this IServiceCollection services)
+    {
+        services.AddScoped<IRecurringCronScheduleCalculator, RecurringCronScheduleCalculator>();
+        return services;
+    }
     public static IServiceCollection AddCrudServices(this IServiceCollection services)
     {
         services.AddScoped<ICategoryService, CategoryService>();
@@ -47,6 +54,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITransactionImportService, TransactionImportService>();
         services.AddScoped<ITransactionExportService, TransactionExportService>();
+        services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
         return services;
     }
 }

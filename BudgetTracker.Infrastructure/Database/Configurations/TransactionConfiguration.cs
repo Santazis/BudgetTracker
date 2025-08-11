@@ -23,7 +23,8 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .WithMany()
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.NoAction);
-        
+
+        builder.Property(t => t.Description).HasMaxLength(255);
         builder.HasOne(t => t.User)
             .WithMany()
             .HasForeignKey(t => t.UserId)

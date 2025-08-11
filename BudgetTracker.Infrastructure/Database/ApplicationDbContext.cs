@@ -1,6 +1,7 @@
 ﻿
 using BudgetTracker.Domain.Models.Budget;
 using BudgetTracker.Domain.Models.Category;
+using BudgetTracker.Domain.Models.RecurringTransaction;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Models.User;
 using BudgetTracker.Infrastructure.Database.Configurations;
@@ -18,6 +19,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentMethod> PaymentMethods { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<TransactionTag> TransactionTags { get; set; }
+    public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
+    public DbSet<RecurringTransactionTag> RecurringTransactionTags { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
@@ -31,5 +34,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new PaymentMethodConfiguration());
         modelBuilder.ApplyConfiguration(new TagConfiguration());
         modelBuilder.ApplyConfiguration(new TransactionTagConfiguration());
+        modelBuilder.ApplyConfiguration(new RecurringTransactionConfiguration());
+        modelBuilder.ApplyConfiguration(new RecurringTransactionTagConfiguration());
     }
 }
