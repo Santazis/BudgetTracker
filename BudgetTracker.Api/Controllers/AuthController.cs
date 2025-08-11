@@ -3,6 +3,7 @@ using BudgetTracker.Application.Interfaces.Auth;
 using BudgetTracker.Application.Models.Auth;
 using BudgetTracker.Application.Models.Auth.Requests;
 using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -11,6 +12,7 @@ namespace BudgetTracker.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
+    private Guid? UserId => User.GetUserId();
     private readonly IAuthService _authService;
 
     public AuthController(IAuthService authService)
@@ -49,20 +51,18 @@ public class AuthController : ControllerBase
         }
         return Ok(new {username});
     }
+    
     [HttpPost("logout")]
     [ProducesResponseType(200)]
-    public async Task<IActionResult> LogoutAsync(
-        CancellationToken cancellation)
+    public async Task<IActionResult> LogoutAsync(CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (UserId is null) return Unauthorized();
+        
         var sessionIdClaim = User.FindFirst("sessionId")?.Value;
-        if (userIdClaim is null || sessionIdClaim is null)
-        {
-            return Unauthorized();
-        }
-        var userId = Guid.Parse(userIdClaim);
+        if (sessionIdClaim is null) return Unauthorized();
+        
         var sessionId = Guid.Parse(sessionIdClaim);
-        await _authService.LogoutAsync(userId, sessionId, cancellation);
+        await _authService.LogoutAsync(UserId.Value, sessionId, cancellation);
         return Ok();
     }
 }

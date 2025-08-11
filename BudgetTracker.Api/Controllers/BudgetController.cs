@@ -1,6 +1,7 @@
 ﻿using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Application.Models.Budget;
 using BudgetTracker.Application.Models.Budget.Requests;
+using BudgetTracker.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -9,6 +10,7 @@ namespace BudgetTracker.Controllers;
 [Route("api/budget")]
 public class BudgetController : ControllerBase
 {
+    private Guid? UserId => User.GetUserId();
     private readonly IBudgetService _budgetService;
     
     public BudgetController(IBudgetService budgetService)
@@ -20,28 +22,23 @@ public class BudgetController : ControllerBase
     [ProducesResponseType<BudgetDto>(200)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateBudget request, CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        return Ok(await _budgetService.CreateBudgetAsync(request,userId,cancellation));
+        if (UserId is null) return Unauthorized();
+        return Ok(await _budgetService.CreateBudgetAsync(request, UserId.Value, cancellation));
     }
 
     [HttpGet]
     [ProducesResponseType<IEnumerable<BudgetDto>>(200)]
     public async Task<IActionResult> GetActiveBudgetsAsync(CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        return Ok(await _budgetService.GetActiveBudgetsAsync(userId,cancellation));
+        if (UserId is null) return Unauthorized();
+        return Ok(await _budgetService.GetActiveBudgetsAsync(UserId.Value, cancellation));
     }
+    
     [HttpGet("{budgetId:guid}")]
     [ProducesResponseType<BudgetDto>(200)]
     public async Task<IActionResult> GetBudgetByIdAsync([FromRoute] Guid budgetId, CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        return Ok(await _budgetService.GetBudgetById(budgetId,userId,cancellation));
+        if (UserId is null) return Unauthorized();
+        return Ok(await _budgetService.GetBudgetById(budgetId, UserId.Value, cancellation));
     }
 }

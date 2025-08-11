@@ -3,6 +3,7 @@ using BudgetTracker.Application.Models;
 using BudgetTracker.Application.Models.Transaction.Requests;
 using BudgetTracker.Application.Models.User;
 using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -11,6 +12,7 @@ namespace BudgetTracker.Controllers;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
+    private Guid? UserId => User.GetUserId();
     private readonly IUserService _userService;
     private readonly ITransactionImportService _transactionImportService;
 
@@ -24,20 +26,16 @@ public class UserController : ControllerBase
     [ProducesResponseType<UserDto>(200)]
     public async Task<IActionResult> GetByIdAsync(CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        return Ok(await _userService.GetByIdAsync(userId, cancellation));
+        if (UserId is null) return Unauthorized();
+        return Ok(await _userService.GetByIdAsync(UserId.Value, cancellation));
     }
 
     [HttpPost("payment-method")]
     public async Task<IActionResult> AddPaymentMethodAsync([FromBody] CreatePaymentMethod request,
         CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        await _userService.AddPaymentMethod(userId, request, cancellation);
+        if (UserId is null) return Unauthorized();
+        await _userService.AddPaymentMethod(UserId.Value, request, cancellation);
         return Ok();
     }
 
@@ -45,10 +43,8 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UpdatePaymentMethod([FromBody] UpdatePaymentMethod request,
         [FromRoute] Guid paymentMethodId, CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        await _userService.UpdatePaymentMethodAsync(userId, paymentMethodId, request, cancellation);
+        if (UserId is null) return Unauthorized();
+        await _userService.UpdatePaymentMethodAsync(UserId.Value, paymentMethodId, request, cancellation);
         return Ok();
     }
 
@@ -56,20 +52,16 @@ public class UserController : ControllerBase
     public async Task<IActionResult> DeletePaymentMethod([FromRoute] Guid paymentMethodId,
         CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        await _userService.DeletePaymentMethodAsync(userId, paymentMethodId, cancellation);
+        if (UserId is null) return Unauthorized();
+        await _userService.DeletePaymentMethodAsync(UserId.Value, paymentMethodId, cancellation);
         return Ok();
     }
 
     [HttpGet("tags")]
     public async Task<IActionResult> GetUserTagsAsync(CancellationToken cancellation)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim is null) return Unauthorized();
-        var userId = Guid.Parse(userIdClaim);
-        return Ok(await _userService.GetUserTagsAsync(userId, cancellation));
+        if (UserId is null) return Unauthorized();
+        return Ok(await _userService.GetUserTagsAsync(UserId.Value, cancellation));
     }
 
     [HttpPost("import-csv")]
@@ -82,10 +74,10 @@ public class UserController : ControllerBase
 
         if (!csv.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             return BadRequest("Invalid file type. Only .csv is supported.");
-        await using var stream = csv.OpenReadStream();
         
-        return Ok(await _transactionImportService.ImportFromCsvAsync(stream, Guid.Empty, cancellation));
+        if (UserId is null) return Unauthorized();
+        
+        await using var stream = csv.OpenReadStream();
+        return Ok(await _transactionImportService.ImportFromCsvAsync(stream, UserId.Value, cancellation));
     }
-
-
 }
