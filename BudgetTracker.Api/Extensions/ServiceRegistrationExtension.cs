@@ -46,6 +46,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<IBudgetService, BudgetService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITransactionImportService, TransactionImportService>();
+        services.AddScoped<ITransactionExportService, TransactionExportService>();
         return services;
     }
 }

@@ -1,9 +1,13 @@
-
+﻿
 ## Get latest from `dotnet new gitignore`
 
 # dotenv files
 .env
-
+*.swp
+_ReSharper.*
+bin
+obj
+packages
 # User-specific files
 *.rsuser
 *.suo
@@ -479,4 +483,3 @@ $RECYCLE.BIN/
 *.lnk
 
 # Vim temporary swap files
-*.swp

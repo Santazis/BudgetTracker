@@ -115,20 +115,5 @@ public class TransactionService : ITransactionService
          await _transactionRepository.CreateRangeAsync(transactions,cancellation);
          await _unitOfWork.SaveChangesAsync(cancellation);
         }
-        // var transactions = request.ToList();
-        // var tasks = new List<Task>();
-        // for (var i = 0; i < transactions.Count; i+=batchSize)
-        // {
-        //     var batch = transactions.Skip(i).Take(batchSize).Select(t=> Transaction.Create(
-        //         amount:Money.Create(t.Amount,"USd"),
-        //         createdAt:t.CreatedAt,
-        //         categoryId:t.CategoryId,
-        //         paymentMethodId:t.PaymentMethodId,
-        //         description:t.Description,
-        //         userId:userId));
-        //     tasks.Add(_transactionRepository.CreateRangeAsync(batch,cancellation));
-        // }
-        // await Task.WhenAll(tasks);
-        // await _unitOfWork.SaveChangesAsync(cancellation);
     }
 }

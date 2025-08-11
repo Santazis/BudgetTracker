@@ -66,4 +66,16 @@ public class TransactionRepository : ITransactionRepository
     {
         await _context.Transactions.AddRangeAsync(transactions, cancellation);
     }
+
+    public IAsyncEnumerable<Transaction> GetTransactionsAsync(TransactionFilter? filter, Guid userId,
+        CancellationToken cancellation)
+    {
+        return  _context.Transactions.AsNoTracking().Where(t => t.UserId == userId)
+            .Filter(filter)
+            .Include(t=> t.Category)
+            .Include(t=> t.PaymentMethod)
+            .Include(t=> t.TransactionTags)
+            .ThenInclude(t=> t.Tag)
+            .AsAsyncEnumerable();
+    }
 }

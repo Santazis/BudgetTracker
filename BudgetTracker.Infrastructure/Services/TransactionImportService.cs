@@ -34,6 +34,7 @@ public class TransactionImportService : ITransactionImportService
             var csvMap = new TransactionCsvImportMap(request.NameIndex,request.DateIndex,request.AmountIndex,request.DescriptionIndex);
             csvReader.Context.RegisterClassMap(csvMap);
         }
+
         var record =  csvReader.GetRecordsAsync<TransactionCsvImport>(cancellation);
         var parsedTransactions = new List<ParsedTransactionResult>();
         await foreach (var rec in record)
