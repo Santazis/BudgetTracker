@@ -18,12 +18,13 @@ public static class TransactionFilterExtension
         }
         if (filter.From.HasValue)
         {
-            query = query.Where(t=> t.CreatedAt >= filter.From.Value);
+            var date = filter.From.Value.Date;
+            query = query.Where(t=> t.CreatedAt >= date);
         }
         if (filter.To.HasValue)
         {
-
-            query = query.Where(t=> t.CreatedAt <= filter.To.Value);
+            var date = filter.To.Value.Date.AddDays(1);
+            query = query.Where(t=> t.CreatedAt <= date);
         }
 
         if (filter.Tags is not null && filter.Tags.Count > 0)

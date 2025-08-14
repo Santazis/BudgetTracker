@@ -21,16 +21,16 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task<List<Category>> GetUserCategoriesAsync(Guid userId, CancellationToken cancellation)
+    public async Task<List<Category>> GetByUserIdAsync(Guid userId, CancellationToken cancellation)
     {
-        var categories = await _context.Categories.Where(c => c.UserId == userId || c.IsSystem).ToListAsync(cancellation);
+        var categories = await _context.Categories.AsNoTracking().Where(c => c.UserId == userId || c.IsSystem).ToListAsync(cancellation);
         return categories;
     }
 
     public async Task<Category?> GetByIdAsync(Guid id,Guid userId, CancellationToken cancellation)
     {
         var category = await _context.Categories
-            .Where(c=> c.Id == id  && (c.IsSystem || c.UserId == id) )
+            .Where(c=> c.Id == id  && (c.IsSystem || c.UserId == userId) )
             .FirstOrDefaultAsync(c => c.Id == id , cancellation);
         return category;
     }
@@ -39,5 +39,10 @@ public class CategoryRepository : ICategoryRepository
     {
         _context.Categories.Remove(category);
     }
-    
+
+    public async Task<int> CountUserCategoriesAsync(Guid userId, CancellationToken cancellation)
+    {
+        var count = await _context.Categories.Where(c => c.UserId == userId).CountAsync(cancellation);
+        return count;   
+    }
 }

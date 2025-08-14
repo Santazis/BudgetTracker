@@ -4,6 +4,7 @@ using BudgetTracker.Application.Models.Transaction;
 using BudgetTracker.Application.Models.Transaction.Requests;
 using BudgetTracker.Application.Models.User;
 using BudgetTracker.Domain.Common.Exceptions;
+using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Domain.Repositories.Filters;
@@ -23,9 +24,9 @@ public class TransactionService : ITransactionService
         _categoryRepository = categoryRepository;
     }
 
-    public async Task<IEnumerable<TransactionDto>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter, CancellationToken cancellation)
+    public async Task<IEnumerable<TransactionDto>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter,PaginationRequest request, CancellationToken cancellation)
     {
-        var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId,filter,cancellation);
+        var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId,filter,request,cancellation);
         
         return transactions.Select(TransactionDto.FromEntity);
     }

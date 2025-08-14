@@ -40,4 +40,33 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
             .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId, cancellation);
         return transaction;
     }
+
+    public IAsyncEnumerable<RecurringTransaction> GetAsAsync(Guid userId)
+    {
+        return  _context.RecurringTransactions.Where(t => t.UserId == userId)
+            .AsAsyncEnumerable(); 
+    }
+
+    public async Task<List<RecurringTransaction>> GetUpcomingAsList(CancellationToken cancellation)
+    {
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = DateTime.UtcNow.Date.AddDays(1);
+
+        return await _context.RecurringTransactions.ToListAsync(cancellation);;
+    }
+
+    public  IAsyncEnumerable<RecurringTransaction> GetUpcomingAsAsync(CancellationToken cancellation)
+    {
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = DateTime.UtcNow.Date.AddDays(1);
+        
+        return  _context.RecurringTransactions.AsAsyncEnumerable();
+    }
+
+
+
+    public async Task AddRangeAsync(IEnumerable<RecurringTransaction> transactions, CancellationToken cancellation)
+    {
+        await _context.RecurringTransactions.AddRangeAsync(transactions, cancellation);
+    }
 }

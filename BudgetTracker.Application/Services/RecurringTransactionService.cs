@@ -77,4 +77,27 @@ public class RecurringTransactionService : IRecurringTransactionService
         await _unitOfWork.SaveChangesAsync(cancellation);
 
     }
+
+    public async Task ProcessAsync(Guid userId, CancellationToken cancellation)
+    {
+        var recurringTransactions = _recurringTransactionRepository.GetAsAsync(userId);
+        await foreach (var recurringTransaction in recurringTransactions)
+        {
+            var transaction = Transaction.Create(
+                amount: recurringTransaction.Amount,
+                createdAt: DateTime.UtcNow,
+                paymentMethodId: recurringTransaction.PaymentMethodId,
+                categoryId: recurringTransaction.CategoryId,
+                userId: userId,
+                description: recurringTransaction.Description
+            );
+    
+            var nextRunDate = _cronScheduleCalculator.CalculateRunDate(recurringTransaction.CronExpression);
+            recurringTransaction.UpdateLastRun();
+            recurringTransaction.UpdateNextRun(nextRunDate);    
+            await _transactionRepository.CreateAsync(transaction, cancellation);
+            await _unitOfWork.SaveChangesAsync(cancellation);
+        }
+    }
+
 }

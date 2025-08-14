@@ -36,6 +36,7 @@ public class Budget : Entity
     public void Update(Money limitAmount,string name,string? description, BudgetPeriod period)
     {
         if(LimitAmount == limitAmount && Period == period) return;
+        if(limitAmount.Amount < 0) throw new ArgumentException("Limit amount must be greater than 0");
         LimitAmount = limitAmount;
         Period = period;
         UpdatedAt = DateTime.UtcNow;

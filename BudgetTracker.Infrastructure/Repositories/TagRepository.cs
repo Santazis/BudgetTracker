@@ -21,4 +21,27 @@ public class TagRepository : ITagRepository
             .ToListAsync(cancellation);
         return tags;
     }
+
+    public async Task<Tag> CreateAsync(Tag tag, CancellationToken cancellation)
+    {
+        await _context.Tags.AddAsync(tag, cancellation);
+        return tag;
+    }
+
+    public async Task<Tag?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellation)
+    {
+        var tag =await _context.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId, cancellation);
+        return tag;
+    }
+
+    public async Task<int> CountAsync(Guid userId, CancellationToken cancellation)
+    {
+        var tags =await _context.Tags.Where(t => t.UserId == userId).CountAsync(cancellation);
+        return tags;
+    }
+
+    public void Delete(Tag tag)
+    {
+        _context.Tags.Remove(tag);
+    }
 }

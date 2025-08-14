@@ -1,4 +1,5 @@
-﻿using BudgetTracker.Domain.Models.Budget;
+﻿using BudgetTracker.Domain.Common.Pagination;
+using BudgetTracker.Domain.Models.Budget;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -20,22 +21,25 @@ public class BudgetRepository : IBudgetRepository
         return budget;
     }
 
-    public Task<Budget?> GetByUserIdAsync(Guid userId, CancellationToken cancellation)
+    public async Task<List<Budget>> GetByUserIdAsync(Guid userId,PaginationRequest request, CancellationToken cancellation)
     {
-        throw new NotImplementedException();
+        var budgets = await _context.Budgets.Where(b => b.UserId == userId).AsNoTracking()
+            .Skip(request.Skip)
+            .Take(request.PageSize)
+            .ToListAsync(cancellation);
+        return budgets;
     }
 
     public void Delete(Budget budget)
     {
-        throw new NotImplementedException();
+        _context.Budgets.Remove(budget);
     }
 
     public async Task<List<Budget>> GetActiveBudgetsByUserIdAsync(Guid userId, CancellationToken cancellation)
     {
         var budgets = await _context.Budgets.AsNoTracking()
-            .Where(b=> b.UserId == userId && b.Period.PeriodEnd >= DateTime.UtcNow)
+            .Where(b=> b.UserId == userId && b.Period.PeriodEnd.Date >= DateTime.UtcNow.Date)
             .ToListAsync(cancellation);
-        
         return budgets;
     }
 
@@ -44,5 +48,11 @@ public class BudgetRepository : IBudgetRepository
     {
         var budget = _context.Budgets.FirstOrDefaultAsync(b => b.Id == id  && b.UserId == userId, cancellation);
         return budget;
+    }
+
+    public async Task<int> CountAsync(Guid userId, CancellationToken cancellation)
+    {
+        var count = await _context.Budgets.Where(b => b.UserId == userId).CountAsync(cancellation);
+        return count;
     }
 }

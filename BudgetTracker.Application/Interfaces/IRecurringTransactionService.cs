@@ -9,7 +9,9 @@ public interface IRecurringTransactionService
 
     Task CreateRecurringTransactionAsync(CreateRecurringTransaction request, Guid userId,
         CancellationToken cancellation);
-    
+
     Task CreateTransactionFromRecurringTransactionAsync(Guid recurringTransactionId, Guid userId,
         CancellationToken cancellation);
+    
+   
 }

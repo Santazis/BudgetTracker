@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using BudgetTracker.Application.Extensions.Filters;
+using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Budget;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
@@ -18,11 +19,13 @@ public class TransactionRepository : ITransactionRepository
         _context = context;
     }
 
-    public async Task<List<Transaction>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter, CancellationToken cancellation)
+    public async Task<List<Transaction>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter,PaginationRequest request, CancellationToken cancellation)
     {
         var transactions = await _context.Transactions.AsNoTracking()
             .OrderByDescending(t=> t.CreatedAt)
             .Where(t=> t.UserId == userId)
+            .Skip(request.Skip)
+            .Take(request.PageSize)
             .Filter(filter)
             .Include(t=> t.Category)
             .Include(t=> t.PaymentMethod)
@@ -77,5 +80,24 @@ public class TransactionRepository : ITransactionRepository
             .Include(t=> t.TransactionTags)
             .ThenInclude(t=> t.Tag)
             .AsAsyncEnumerable();
+    }
+
+    public async Task<int> CountAsync(Guid userId, CancellationToken cancellation)
+    {
+        var count = await _context.Transactions.Where(t => t.UserId == userId).CountAsync(cancellation);
+        return count;
+    }
+
+    public async Task<decimal> GetSpentAmountAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    {
+        var amount = await _context.Transactions.AsNoTracking().Where(t=> t.UserId == userId)
+            .Filter(filter)
+            .SumAsync(t=> t.Amount.Amount, cancellation);
+        return amount;
+    }
+
+    public Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    {
+        throw new NotImplementedException();
     }
 }

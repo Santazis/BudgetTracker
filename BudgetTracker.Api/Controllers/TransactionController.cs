@@ -3,6 +3,7 @@ using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Application.Models.Category;
 using BudgetTracker.Application.Models.Transaction;
 using BudgetTracker.Application.Models.Transaction.Requests;
+using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Domain.Repositories.Filters;
@@ -51,10 +52,12 @@ public class TransactionController : ControllerBase
     
     [HttpGet]
     [ProducesResponseType<IEnumerable<TransactionDto>>(200)]
-    public async Task<IActionResult> GetTransactionsByUserIdAsync(CancellationToken cancellation,[FromQuery] TransactionFilter? filter)
+    public async Task<IActionResult> GetTransactionsByUserIdAsync(CancellationToken cancellation,
+        [FromQuery] TransactionFilter? filter,
+        [FromQuery]PaginationRequest request)
     {
         if (UserId is null) return Unauthorized();
-        return Ok(await _transactionService.GetTransactionsByUserIdAsync(UserId.Value, filter, cancellation));
+        return Ok(await _transactionService.GetTransactionsByUserIdAsync(UserId.Value, filter,request, cancellation));
     }
     
     [HttpGet("summary")]

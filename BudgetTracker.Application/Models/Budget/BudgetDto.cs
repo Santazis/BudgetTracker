@@ -13,10 +13,10 @@ public record BudgetDto(
     bool IsExceeded,
     DateTime CreatedAt,
     DateTime PeriodStart,
-    DateTime PeriodEnd,
-    IEnumerable<BudgetTransactionDto> Transactions)
+    DateTime PeriodEnd
+    )
 {
-    public static BudgetDto FromEntity(Domain.Models.Budget.Budget b, IEnumerable<Domain.Models.Transaction.Transaction> transactions,
+    public static BudgetDto FromEntity(Domain.Models.Budget.Budget b,  
         Money spent, Money remaining) =>
         new BudgetDto(
             Id: b.Id,
@@ -28,8 +28,6 @@ public record BudgetDto(
             IsExceeded: spent > b.LimitAmount,
             CreatedAt: b.CreatedAt,
             PeriodStart: b.Period.PeriodStart,
-            PeriodEnd: b.Period.PeriodEnd,
-            Transactions: transactions.Select(t =>
-                new BudgetTransactionDto(t.Amount, t.Description, t.CreatedAt, t.Id))
+            PeriodEnd: b.Period.PeriodEnd
         );
 }

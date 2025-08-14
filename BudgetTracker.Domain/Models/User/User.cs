@@ -10,9 +10,9 @@ public sealed class User : Entity
         _paymentMethods = new List<PaymentMethod>();
     }
 
-    public Name Name { get; private set; }
-    public string PasswordHash { get; private set; }
-    public string Username { get;private set; }
+    public Name Name { get; private set; } = null!;
+    public string PasswordHash { get; private set; } = null!;
+    public string Username { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public Email Email { get; private set; } = null!;
     public bool IsEmailVerified { get; private set; }
@@ -32,9 +32,6 @@ public sealed class User : Entity
     }
     public void AddPaymentMethod(PaymentMethodType type,string name,string? details)
     {
-        Console.WriteLine("PAAAAYMENT");
-        Console.WriteLine(PaymentMethods.Count);
-        Console.WriteLine(_paymentMethods.Count);
        if(string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required");
        if (_paymentMethods.Any(m=> string.Equals(m.Name,name,StringComparison.OrdinalIgnoreCase)))
        {

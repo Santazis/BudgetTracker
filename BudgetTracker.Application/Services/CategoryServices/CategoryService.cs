@@ -34,7 +34,7 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<CategoryDto>> GetUserCategoriesAsync(Guid userId, CancellationToken cancellation)
     {
-        var categories = await _categoryRepository.GetUserCategoriesAsync(userId,cancellation);
+        var categories = await _categoryRepository.GetByUserIdAsync(userId,cancellation);
         return categories.Select(c=> new CategoryDto(c.Name,c.Id,c.Type.ToString()));
     }
 
