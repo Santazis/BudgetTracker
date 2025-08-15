@@ -41,4 +41,20 @@ public class BudgetController : ControllerBase
         if (UserId is null) return Unauthorized();
         return Ok(await _budgetService.GetBudgetById(budgetId, UserId.Value, cancellation));
     }
+
+    [HttpPatch("{id:guid}")]
+    public async Task<IActionResult> UpdateAsync([FromRoute] Guid id,[FromBody]UpdateBudget request,CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _budgetService.UpdateAsync(request,id,UserId.Value,cancellation);
+        return Ok();
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id,CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _budgetService.DeleteAsync(id,UserId.Value,cancellation);
+        return Ok();
+    }
 }

@@ -12,7 +12,6 @@ public interface IUserService
     Task<UserDto> GetByIdAsync(Guid userId, CancellationToken cancellation);
     Task AddPaymentMethod(Guid userId, CreatePaymentMethod request, CancellationToken cancellation);
     Task DeletePaymentMethodAsync(Guid userId, Guid paymentMethodId, CancellationToken cancellation);
-
     Task UpdatePaymentMethodAsync(Guid userId, Guid paymentMethodId, UpdatePaymentMethod request,
         CancellationToken cancellation);
     Task<IEnumerable<Tag>> GetUserTagsAsync(Guid userId, CancellationToken cancellation);

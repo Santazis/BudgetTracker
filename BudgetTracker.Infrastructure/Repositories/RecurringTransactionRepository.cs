@@ -1,4 +1,5 @@
-﻿using BudgetTracker.Domain.Models.RecurringTransaction;
+﻿using BudgetTracker.Domain.Common.Pagination;
+using BudgetTracker.Domain.Models.RecurringTransaction;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,17 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
         _context = context;
     }
 
-    public async Task<List<RecurringTransaction>> GetByUserIdAsync(Guid userId, CancellationToken cancellation)
+    public void Delete(RecurringTransaction transaction)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<RecurringTransaction>> GetByUserIdAsync(Guid userId,PaginationRequest request, CancellationToken cancellation)
     {
         var transactions = await _context.RecurringTransactions.AsNoTracking()
             .Where(t=> t.UserId == userId)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Include(t=> t.PaymentMethod)
             .Include(t=> t.Category)
             .Include(t=> t.RecurringTransactionTags)

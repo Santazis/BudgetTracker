@@ -4,17 +4,17 @@ public class PaginationRequest
 {
     private const int DefaultPageSize = 10;
     private const int MaxPageSize = 100;
-    public int PageNumber { get; set; } = 1;
-    public int PageSize { get; set; } = DefaultPageSize;
-
-    public PaginationRequest() {}
-    public PaginationRequest(int pageNumber, int pageSize)
-    {
-        pageNumber = pageNumber  <=  0 ? 1 : pageNumber;
-        pageSize = pageSize is < 0 or > MaxPageSize ? DefaultPageSize : pageSize;
-        PageNumber = pageNumber;
-        PageSize = pageSize;
-    }
+    private int _pageSize = DefaultPageSize;
+    private int _pageNumber = 1;
     
-    public int Skip => (PageNumber - 1) * PageSize;
+    public int PageNumber
+    {
+        get => _pageNumber;
+        set => _pageNumber = value < 1 ? 1 : value;
+    }
+    public int PageSize
+    {
+        get => _pageSize;
+        set => _pageSize = value > MaxPageSize ? MaxPageSize : value;
+    }
 }

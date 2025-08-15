@@ -24,7 +24,7 @@ public class TransactionRepository : ITransactionRepository
         var transactions = await _context.Transactions.AsNoTracking()
             .OrderByDescending(t=> t.CreatedAt)
             .Where(t=> t.UserId == userId)
-            .Skip(request.Skip)
+            .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .Filter(filter)
             .Include(t=> t.Category)
@@ -56,15 +56,7 @@ public class TransactionRepository : ITransactionRepository
     {
         _context.Transactions.Remove(transaction);
     }
-
-    public async Task<List<Transaction>> GetTransactionsForBudgetAsync(Guid userId, Guid categoryId, BudgetPeriod period, CancellationToken cancellation)
-    {
-        var transactions = await _context.Transactions.AsNoTracking()
-            .Where(t=> t.UserId == userId && t.CategoryId == categoryId && t.CreatedAt >= period.PeriodStart && t.CreatedAt <= period.PeriodEnd)
-            .ToListAsync(cancellation);
-        return transactions;
-    }
-
+    
     public async Task CreateRangeAsync(IEnumerable<Transaction> transactions, CancellationToken cancellation)
     {
         await _context.Transactions.AddRangeAsync(transactions, cancellation);
@@ -96,8 +88,10 @@ public class TransactionRepository : ITransactionRepository
         return amount;
     }
 
-    public Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    public async Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
     {
-        throw new NotImplementedException();
+        var transactions =await _context.Transactions.AsNoTracking().Where(t => t.UserId == userId)
+            .Filter(filter).ToListAsync(cancellation);
+        return transactions;
     }
 }

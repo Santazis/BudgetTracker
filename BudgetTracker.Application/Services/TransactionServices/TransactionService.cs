@@ -26,6 +26,7 @@ public class TransactionService : ITransactionService
 
     public async Task<IEnumerable<TransactionDto>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter,PaginationRequest request, CancellationToken cancellation)
     {
+        Console.WriteLine(request.PageNumber);
         var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId,filter,request,cancellation);
         
         return transactions.Select(TransactionDto.FromEntity);

@@ -2,6 +2,7 @@
 using BudgetTracker.Application.Models.RecurringTransaction;
 using BudgetTracker.Application.Models.RecurringTransaction.Requests;
 using BudgetTracker.Domain.Common.Exceptions;
+using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.DomainServices;
 using BudgetTracker.Domain.Models.RecurringTransaction;
 using BudgetTracker.Domain.Models.Transaction;
@@ -15,8 +16,10 @@ public class RecurringTransactionService : IRecurringTransactionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IRecurringCronScheduleCalculator _cronScheduleCalculator;
     private readonly ITransactionRepository _transactionRepository;
+
     public RecurringTransactionService(IRecurringTransactionRepository recurringTransactionRepository,
-        IUnitOfWork unitOfWork, IRecurringCronScheduleCalculator cronScheduleCalculator, ITransactionRepository transactionRepository)
+        IUnitOfWork unitOfWork, IRecurringCronScheduleCalculator cronScheduleCalculator,
+        ITransactionRepository transactionRepository)
     {
         _recurringTransactionRepository = recurringTransactionRepository;
         _unitOfWork = unitOfWork;
@@ -24,10 +27,12 @@ public class RecurringTransactionService : IRecurringTransactionService
         _transactionRepository = transactionRepository;
     }
 
-    public async Task<IEnumerable<RecurringTransactionDto>> GetRecurringTransactionsAsync(Guid userId,
+    public async Task<IEnumerable<RecurringTransactionDto>> GetByUserIdAsync
+    (Guid userId, PaginationRequest request,
         CancellationToken cancellation)
     {
-        var transactions = await _recurringTransactionRepository.GetByUserIdAsync(userId, cancellation);
+        
+        var transactions = await _recurringTransactionRepository.GetByUserIdAsync(userId, request, cancellation);
         return transactions.Select(RecurringTransactionDto.FromEntity);
     }
 
@@ -35,7 +40,6 @@ public class RecurringTransactionService : IRecurringTransactionService
         CancellationToken cancellation)
     {
         var runDate = _cronScheduleCalculator.CalculateRunDate(request.CronExpression);
-        Console.WriteLine(runDate);
         var transaction = RecurringTransaction.Create(
             userId: userId,
             categoryId: request.CategoryId,
@@ -45,22 +49,23 @@ public class RecurringTransactionService : IRecurringTransactionService
             cronExpression: request.CronExpression,
             nextRun: runDate
         );
-        
-        await _recurringTransactionRepository.CreateAsync(transaction,cancellation);
+
+        await _recurringTransactionRepository.CreateAsync(transaction, cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
     }
 
     public async Task CreateTransactionFromRecurringTransactionAsync(Guid recurringTransactionId, Guid userId,
         CancellationToken cancellation)
     {
-        var recurringTransaction = await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId,userId, cancellation);
-    
+        var recurringTransaction =
+            await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
+
         if (recurringTransaction == null)
         {
             throw new RequestException("Recurring Transaction Not Found");
         }
-    
-        
+
+
         var transaction = Transaction.Create(
             amount: recurringTransaction.Amount,
             createdAt: DateTime.UtcNow,
@@ -69,13 +74,12 @@ public class RecurringTransactionService : IRecurringTransactionService
             userId: userId,
             description: recurringTransaction.Description
         );
-    
+
         var nextRunDate = _cronScheduleCalculator.CalculateRunDate(recurringTransaction.CronExpression);
         recurringTransaction.UpdateLastRun();
-        recurringTransaction.UpdateNextRun(nextRunDate);    
+        recurringTransaction.UpdateNextRun(nextRunDate);
         await _transactionRepository.CreateAsync(transaction, cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-
     }
 
     public async Task ProcessAsync(Guid userId, CancellationToken cancellation)
@@ -91,13 +95,35 @@ public class RecurringTransactionService : IRecurringTransactionService
                 userId: userId,
                 description: recurringTransaction.Description
             );
-    
+
             var nextRunDate = _cronScheduleCalculator.CalculateRunDate(recurringTransaction.CronExpression);
             recurringTransaction.UpdateLastRun();
-            recurringTransaction.UpdateNextRun(nextRunDate);    
+            recurringTransaction.UpdateNextRun(nextRunDate);
             await _transactionRepository.CreateAsync(transaction, cancellation);
             await _unitOfWork.SaveChangesAsync(cancellation);
         }
     }
 
+    public async Task DeleteAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    {
+        var transaction = await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId,cancellation);
+        if (transaction is null)
+        {
+            throw new RequestException("Recurring Transaction Not Found");
+        }
+        _recurringTransactionRepository.Delete(transaction);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
+
+    public async Task UpdateAsync(Guid recurringTransactionId, Guid userId,UpdateRecurringTransaction request, CancellationToken cancellation)
+    {
+        var transaction = await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId,cancellation);
+        if (transaction is  null)
+        {
+            throw new RequestException("Recurring Transaction Not Found");
+        }
+        var amount = Money.Create(request.Amount, request.Currency);
+        transaction.Update(request.Description,amount,request.CronExpression);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
 }

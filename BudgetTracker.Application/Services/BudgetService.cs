@@ -112,4 +112,15 @@ public class BudgetService : IBudgetService
             Money.Create(0, request.Currency), limitAmount, PeriodStart: request.PeriodStart,
             PeriodEnd: request.PeriodEnd, IsExceeded: false, CreatedAt: budget.CreatedAt);
     }
+
+    public async Task DeleteAsync(Guid budgetId, Guid userId, CancellationToken cancellation)
+    {
+        var budget = await _budgetRepository.GetByIdAsync(budgetId, userId,cancellation);
+        if (budget is null)
+        {
+            throw new RequestException("Budget not found");
+        }
+        _budgetRepository.Delete(budget);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
 }

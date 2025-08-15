@@ -24,7 +24,7 @@ public class BudgetRepository : IBudgetRepository
     public async Task<List<Budget>> GetByUserIdAsync(Guid userId,PaginationRequest request, CancellationToken cancellation)
     {
         var budgets = await _context.Budgets.Where(b => b.UserId == userId).AsNoTracking()
-            .Skip(request.Skip)
+            .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync(cancellation);
         return budgets;
