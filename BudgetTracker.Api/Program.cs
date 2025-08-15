@@ -3,6 +3,8 @@ using BudgetTracker.Application.Models.Jwt;
 using BudgetTracker.Extensions;
 using BudgetTracker.Infrastructure.Database;
 using BudgetTracker.Middlewares;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +17,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c =>
+    {
+        c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("HangfireConnection"));
+    }));
+
+builder.Services.AddHangfireServer();
 builder.Services.AddTransient<ExceptionMiddleware>();
 JwtSettings jwtSettings = new JwtSettings();
 builder.Services.AddSingleton(jwtSettings);
@@ -81,6 +93,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHangfireDashboard();
 }
 
 app.UseHttpsRedirection();
