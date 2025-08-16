@@ -1,5 +1,6 @@
-﻿using BudgetTracker.Domain.Models.User;
+﻿using BenchmarkDotNet.Running;
+using BudgetTracker.Infrastructure.Database;
+using ConsoleApp1;
+using Microsoft.Extensions.DependencyInjection;
 
-var name = Name.Create("adam", "lui");
-var name2 = Name.Create("adam", "lui");
-Console.WriteLine(name.ToString());
+BenchmarkRunner.Run<EfCoreBenchmarks>();

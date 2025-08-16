@@ -12,7 +12,7 @@ public class RecurringTransactionConfiguration : IEntityTypeConfiguration<Recurr
             .HasKey(t => t.Id);
 
         builder.Property(t => t.Description).HasMaxLength(255);
-
+        builder.HasIndex(t => t.NextRun);
         builder.ComplexProperty(t => t.Amount, t =>
         {
             t.Property(t => t.Amount).HasColumnName("Amount").IsRequired();

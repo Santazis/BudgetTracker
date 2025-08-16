@@ -13,10 +13,11 @@ public class RecurringTransactionController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly IRecurringTransactionService _recurringTransactionService;
-
-    public RecurringTransactionController(IRecurringTransactionService recurringTransactionService)
+    private readonly IRecurringTransactionProcessingService _recurringTransactionProcessingService;
+    public RecurringTransactionController(IRecurringTransactionService recurringTransactionService, IRecurringTransactionProcessingService recurringTransactionProcessingService)
     {
         _recurringTransactionService = recurringTransactionService;
+        _recurringTransactionProcessingService = recurringTransactionProcessingService;
     }
 
     [HttpGet]
@@ -57,4 +58,10 @@ public class RecurringTransactionController : ControllerBase
         return Ok();   
     }
     
+    [HttpPost("start-test-cursor")]
+    public async Task<IActionResult> StartTestOffset(CancellationToken cancellation)
+    {
+        await _recurringTransactionProcessingService.ProcessRecurringTransactionsByCursorPaginationAsync(cancellation);
+        return Ok();   
+    }
 }
