@@ -16,4 +16,19 @@ public class UnitOfWork : IUnitOfWork
     {
         return _context.SaveChangesAsync(cancellation);
     }
+
+    public Task BeginTransactionAsync(CancellationToken cancellation)
+    {
+        return _context.Database.BeginTransactionAsync(cancellation);
+    }
+
+    public Task CommitTransactionAsync(CancellationToken cancellation)
+    {
+        return _context.Database.CommitTransactionAsync(cancellation);
+    }
+
+    public Task RollbackTransactionAsync(CancellationToken cancellation)
+    {
+        return _context.Database.RollbackTransactionAsync(cancellation);
+    }
 }

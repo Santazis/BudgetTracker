@@ -1,6 +1,7 @@
 using System.Text;
 using BudgetTracker.Application.Models.Jwt;
 using BudgetTracker.Extensions;
+using BudgetTracker.Infrastructure.BackgroundServices;
 using BudgetTracker.Infrastructure.Database;
 using BudgetTracker.Middlewares;
 using Hangfire;
@@ -57,6 +58,7 @@ builder.Services.AddRepositories();
 builder.Services.AddAuthServices();
 builder.Services.AddCrudServices();
 builder.Services.AddControllers();
+builder.Services.AddBackgroundServices();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddSwaggerGen(c =>
 {

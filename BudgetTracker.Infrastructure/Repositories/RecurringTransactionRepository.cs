@@ -17,9 +17,10 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
 
     public void Delete(RecurringTransaction transaction)
     {
-        throw new NotImplementedException();
     }
 
+    
+    
     public async Task<List<RecurringTransaction>> GetByUserIdAsync(Guid userId,PaginationRequest request, CancellationToken cancellation)
     {
         var transactions = await _context.RecurringTransactions.AsNoTracking()
@@ -49,32 +50,52 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
         return transaction;
     }
 
-    public IAsyncEnumerable<RecurringTransaction> GetAsAsync(Guid userId)
-    {
-        return  _context.RecurringTransactions.Where(t => t.UserId == userId)
-            .AsAsyncEnumerable(); 
-    }
-
-    public async Task<List<RecurringTransaction>> GetUpcomingAsList(CancellationToken cancellation)
-    {
-        var today = DateTime.UtcNow.Date;
-        var tomorrow = DateTime.UtcNow.Date.AddDays(1);
-
-        return await _context.RecurringTransactions.ToListAsync(cancellation);;
-    }
-
-    public  IAsyncEnumerable<RecurringTransaction> GetUpcomingAsAsync(CancellationToken cancellation)
-    {
-        var today = DateTime.UtcNow.Date;
-        var tomorrow = DateTime.UtcNow.Date.AddDays(1);
-        
-        return  _context.RecurringTransactions.AsAsyncEnumerable();
-    }
-
 
 
     public async Task AddRangeAsync(IEnumerable<RecurringTransaction> transactions, CancellationToken cancellation)
     {
         await _context.RecurringTransactions.AddRangeAsync(transactions, cancellation);
+    }
+
+    public void UpdateRange(List<RecurringTransaction> transactions)
+    {
+        _context.RecurringTransactions.UpdateRange(transactions);
+    }
+
+    public async Task<List<RecurringTransaction>> GetByCursorAsync(Guid? lastId,DateTime? lastNextRun, int batchSize, DateTime now, DateTime end, CancellationToken cancellation)
+    {
+        var query = _context.RecurringTransactions.AsQueryable();
+        if (lastId.HasValue && lastNextRun.HasValue) 
+        {
+            //Using tuple comparison for PostgresSql with indexed columns
+            query = query.Where(t => EF.Functions.GreaterThan(
+                ValueTuple.Create(t.Id,t.NextRun ),
+                ValueTuple.Create(lastId,lastNextRun)) && t.NextRun >= now);
+        }
+        else
+        {
+            query = query.Where(t => t.NextRun >= now);
+        }
+        
+        var transactions = await query
+            .AsNoTracking()
+            .OrderBy(t=> t.Id)
+            .ThenBy(t=> t.NextRun)
+            .Take(batchSize)
+            .Include(t=> t.RecurringTransactionTags)
+            .ToListAsync(cancellation);
+        return transactions;
+    }
+
+    public async Task<List<RecurringTransaction>> GetByOffsetAsync(int offset, int batchSize, DateTime now, DateTime end, CancellationToken cancellation)
+    {
+        var transactions = await _context.RecurringTransactions
+            .AsNoTracking()
+            .Where(t=> t.NextRun >= now)
+            .Skip(offset)
+            .Take(batchSize)
+            .Include(t=> t.RecurringTransactionTags)
+            .ToListAsync(cancellation);
+        return transactions;
     }
 }

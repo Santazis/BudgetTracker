@@ -12,7 +12,6 @@ public class BudgetController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly IBudgetService _budgetService;
-    
     public BudgetController(IBudgetService budgetService)
     {
         _budgetService = budgetService;
