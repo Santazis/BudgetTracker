@@ -2,4 +2,4 @@
 
 namespace BudgetTracker.Application.Models.Category.Requests;
 
-public record CreateCategory(string Name,CategoryTypes Type,Guid UserId);
+public record CreateCategory(string Name,CategoryTypes Type);

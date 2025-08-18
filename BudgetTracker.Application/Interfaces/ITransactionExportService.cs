@@ -4,5 +4,5 @@ namespace BudgetTracker.Application.Interfaces;
 
 public interface ITransactionExportService
 {
-    Task<byte[]> ExportToCsvAsync(Guid userId,TransactionFilter filter, CancellationToken cancellation);
+    Task ExportToCsvAsync(Guid userId,TransactionFilter filter,Stream output, CancellationToken cancellation);
 }

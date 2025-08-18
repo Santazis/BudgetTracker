@@ -7,4 +7,7 @@ public class TransactionFilter
     public HashSet<Guid>? Categories { get; set; }
     public HashSet<Guid>? Tags { get; set; }
     public HashSet<Guid>? PaymentMethods { get; set; }
+    public string? SortBy { get; set; }
+    public bool? IsIncome { get; set; }
+    public bool Descending { get; set; } = true;
 }

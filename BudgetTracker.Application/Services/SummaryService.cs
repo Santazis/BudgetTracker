@@ -2,6 +2,7 @@
 using BudgetTracker.Application.Models;
 using BudgetTracker.Application.Models.Category;
 using BudgetTracker.Application.Models.Filters;
+using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Category;
 using BudgetTracker.Domain.Models.Enums;
 using BudgetTracker.Domain.Models.Transaction;
@@ -66,5 +67,24 @@ public class SummaryService : ISummaryService
             TotalExpense: totalExpense,
             ByCategory: byCategory);
         return summary;
+    }
+
+    public async Task<IEnumerable<CategorySummary>> GetTopExpensesCategoryInMonthAsync(Guid userId,  CancellationToken cancellation)
+    {
+        var filter = new TransactionFilter()
+        {
+            SortBy = "amount",
+            IsIncome = false,
+        };
+        var pagination = new PaginationRequest()
+        {
+            PageSize = 15
+        };
+        var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId, filter, pagination,cancellation);
+        var groupedTransactions = transactions.GroupBy(t => t.Category.Id)
+            .Select(g => new CategorySummary(
+                new CategoryDto(Id: g.Key, Name: g.First().Category.Name, Type: g.First().Category.Type.ToString()),
+                Money.Create(g.Sum(t => t.Amount.Amount), g.First().Amount.Currency)));
+        return groupedTransactions;
     }
 }

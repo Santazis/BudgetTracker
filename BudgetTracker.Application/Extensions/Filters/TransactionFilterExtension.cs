@@ -1,4 +1,5 @@
-﻿using BudgetTracker.Domain.Models.Transaction;
+﻿using BudgetTracker.Domain.Models.Enums;
+using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories.Filters;
 
 namespace BudgetTracker.Application.Extensions.Filters;
@@ -21,21 +22,29 @@ public static class TransactionFilterExtension
             var date = filter.From.Value.Date;
             query = query.Where(t=> t.CreatedAt >= date);
         }
+
+        if (filter.IsIncome.HasValue)
+        {
+            query = filter.IsIncome.Value ? query.Where(t=> t.Category.Type == CategoryTypes.Income) : query.Where(t=> t.Category.Type == CategoryTypes.Expense);       
+        }
         if (filter.To.HasValue)
         {
             var date = filter.To.Value.Date.AddDays(1);
             query = query.Where(t=> t.CreatedAt <= date);
         }
 
-        if (filter.Tags is not null && filter.Tags.Count > 0)
+        if (IsCollectionExistsAndNotEmpty(filter.Tags))
         {
             query = query.Where(t => t.TransactionTags.Any(tt => filter.Tags.Contains(tt.TagId)));
         }
 
-        if (filter.PaymentMethods is not null && filter.PaymentMethods.Count > 0)
+        if (IsCollectionExistsAndNotEmpty(filter.PaymentMethods))
         {
             query = query.Where(t => t.PaymentMethodId != null && filter.PaymentMethods.Contains(t.PaymentMethodId.Value));
         }
+        
         return query;
     }
+    
+    private static bool IsCollectionExistsAndNotEmpty(HashSet<Guid>? ids) =>  ids is not null && ids.Count > 0;
 }

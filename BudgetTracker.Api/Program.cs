@@ -1,9 +1,12 @@
+using System.Reflection.Metadata;
 using System.Text;
+using BudgetTracker.Application;
 using BudgetTracker.Application.Models.Jwt;
 using BudgetTracker.Extensions;
 using BudgetTracker.Infrastructure.BackgroundServices;
 using BudgetTracker.Infrastructure.Database;
 using BudgetTracker.Middlewares;
+using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -18,6 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddValidatorsFromAssembly(typeof(ApplicationByAssemblyReference).Assembly,includeInternalTypes:true);
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
