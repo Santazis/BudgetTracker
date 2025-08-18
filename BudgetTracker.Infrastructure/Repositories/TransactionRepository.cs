@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using BudgetTracker.Application.Extensions;
 using BudgetTracker.Application.Extensions.Filters;
 using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Budget;
@@ -22,11 +23,11 @@ public class TransactionRepository : ITransactionRepository
     public async Task<List<Transaction>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter,PaginationRequest request, CancellationToken cancellation)
     {
         var transactions = await _context.Transactions.AsNoTracking()
-            .OrderByDescending(t=> t.CreatedAt)
             .Where(t=> t.UserId == userId)
+            .ApplySorting(filter)
+            .Filter(filter)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Filter(filter)
             .Include(t=> t.Category)
             .Include(t=> t.PaymentMethod)
             .Include(t=> t.TransactionTags)

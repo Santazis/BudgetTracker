@@ -2,6 +2,7 @@
 using BudgetTracker.Application.Models.Budget;
 using BudgetTracker.Application.Models.Budget.Requests;
 using BudgetTracker.Extensions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -12,9 +13,13 @@ public class BudgetController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly IBudgetService _budgetService;
-    public BudgetController(IBudgetService budgetService)
+    private readonly IValidator<CreateBudget> _createBudgetValidator;
+    private readonly IValidator<UpdateBudget> _updateBudgetValidator;
+    public BudgetController(IBudgetService budgetService, IValidator<CreateBudget> createBudgetValidator, IValidator<UpdateBudget> updateBudgetValidator)
     {
         _budgetService = budgetService;
+        _createBudgetValidator = createBudgetValidator;
+        _updateBudgetValidator = updateBudgetValidator;
     }
 
     [HttpPost]
@@ -22,6 +27,11 @@ public class BudgetController : ControllerBase
     public async Task<IActionResult> CreateAsync([FromBody] CreateBudget request, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
+        var validate = await _createBudgetValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());       
+        }
         return Ok(await _budgetService.CreateBudgetAsync(request, UserId.Value, cancellation));
     }
 
@@ -45,6 +55,11 @@ public class BudgetController : ControllerBase
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid id,[FromBody]UpdateBudget request,CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
+        var validate = await _updateBudgetValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());       
+        }
         await _budgetService.UpdateAsync(request,id,UserId.Value,cancellation);
         return Ok();
     }

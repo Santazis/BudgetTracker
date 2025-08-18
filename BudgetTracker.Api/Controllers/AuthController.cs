@@ -3,7 +3,10 @@ using BudgetTracker.Application.Interfaces.Auth;
 using BudgetTracker.Application.Models.Auth;
 using BudgetTracker.Application.Models.Auth.Requests;
 using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Application.Validators.Auth;
 using BudgetTracker.Extensions;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -14,15 +17,26 @@ public class AuthController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly IAuthService _authService;
+    private readonly IValidator<CreateUser> _createUserValidator;
+    private readonly IValidator<LoginRequest> _loginRequestValidator;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IValidator<CreateUser> createUserValidator,
+        IValidator<LoginRequest> loginRequestValidator)
     {
         _authService = authService;
+        _createUserValidator = createUserValidator;
+        _loginRequestValidator = loginRequestValidator;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([FromBody] CreateUser request, CancellationToken cancellation)
     {
+        var validate = await _createUserValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());
+        }
+
         await _authService.RegisterAsync(request, cancellation);
         return Ok();
     }
@@ -31,9 +45,15 @@ public class AuthController : ControllerBase
     [ProducesResponseType<LoginResponse>(200)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellation)
     {
+        var validate = await _loginRequestValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());
+        }
+
         return Ok(await _authService.LoginAsync(request, cancellation));
     }
-    
+
     [HttpPost("refresh")]
     [ProducesResponseType<AuthResponse>(200)]
     public async Task<IActionResult> RefreshAsync([FromBody] string refreshToken, CancellationToken cancellation)
@@ -41,7 +61,7 @@ public class AuthController : ControllerBase
         return Ok(await _authService.RefreshAsync(refreshToken, cancellation));
     }
 
-    [HttpPost("session")]
+    [HttpGet("session")]
     public async Task<IActionResult> GetSessionAsync(CancellationToken cancellation)
     {
         var username = User.Identity?.Name;
@@ -49,18 +69,19 @@ public class AuthController : ControllerBase
         {
             return Unauthorized();
         }
-        return Ok(new {username});
+
+        return Ok(new { username });
     }
-    
+
     [HttpPost("logout")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> LogoutAsync(CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        
+
         var sessionIdClaim = User.FindFirst("sessionId")?.Value;
         if (sessionIdClaim is null) return Unauthorized();
-        
+
         var sessionId = Guid.Parse(sessionIdClaim);
         await _authService.LogoutAsync(UserId.Value, sessionId, cancellation);
         return Ok();

@@ -6,4 +6,5 @@ public interface IRecurringCronScheduleCalculator
 {
     DateTime CalculateNextRunDate(RecurringTransaction transaction);
     DateTime CalculateRunDate(string cronExpression);
+    bool ValidateCronExpression(string cronExpression);
 }

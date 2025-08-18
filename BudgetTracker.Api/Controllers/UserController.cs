@@ -4,6 +4,7 @@ using BudgetTracker.Application.Models.Transaction.Requests;
 using BudgetTracker.Application.Models.User;
 using BudgetTracker.Application.Models.User.Requests;
 using BudgetTracker.Extensions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -15,11 +16,14 @@ public class UserController : ControllerBase
     private Guid? UserId => User.GetUserId();
     private readonly IUserService _userService;
     private readonly ITransactionImportService _transactionImportService;
-
-    public UserController(IUserService userService, ITransactionImportService transactionImportService)
+    private readonly IValidator<CreatePaymentMethod> _createPaymentMethodValidator;
+    private readonly IValidator<UpdatePaymentMethod> _updatePaymentMethodValidator;
+    public UserController(IUserService userService, ITransactionImportService transactionImportService, IValidator<CreatePaymentMethod> createPaymentMethodValidator, IValidator<UpdatePaymentMethod> updatePaymentMethodValidator)
     {
         _userService = userService;
         _transactionImportService = transactionImportService;
+        _createPaymentMethodValidator = createPaymentMethodValidator;
+        _updatePaymentMethodValidator = updatePaymentMethodValidator;
     }
 
     [HttpGet]
@@ -35,6 +39,11 @@ public class UserController : ControllerBase
         CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
+        var validate = await _createPaymentMethodValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());       
+        }
         await _userService.AddPaymentMethod(UserId.Value, request, cancellation);
         return Ok();
     }
@@ -44,6 +53,11 @@ public class UserController : ControllerBase
         [FromRoute] Guid paymentMethodId, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
+        var validate = await _updatePaymentMethodValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());       
+        }
         await _userService.UpdatePaymentMethodAsync(UserId.Value, paymentMethodId, request, cancellation);
         return Ok();
     }

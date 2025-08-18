@@ -20,12 +20,12 @@ public class CategoryService : ICategoryService
     }
 
 
-    public async Task<CategoryDto> CreateAsync(CreateCategory request, CancellationToken cancellation)
+    public async Task<CategoryDto> CreateAsync(CreateCategory request,Guid userId, CancellationToken cancellation)
     {
         var category = Category.Create(
             isSystem:false,
             name:request.Name,
-            userId:request.UserId,
+            userId:userId,
             type:request.Type);
         await _categoryRepository.CreateAsync(category,cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
@@ -53,12 +53,12 @@ public class CategoryService : ICategoryService
         await _unitOfWork.SaveChangesAsync(cancellation);
     }
 
-    public async Task<CategoryDto> UpdateCategoryAsync(string name,Guid categoryId,Guid userId, CancellationToken cancellation)
+    public async Task<CategoryDto> UpdateCategoryAsync(UpdateCategory request,Guid categoryId,Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(categoryId,userId,cancellation);
         if (category is null) throw new RequestException("Category not found");
         if (category.IsSystem) throw new RequestException("Cannot update system category");
-        category.Update(name);
+        category.Update(request.Name,request.Type);
         await _unitOfWork.SaveChangesAsync(cancellation);
         return new CategoryDto(category.Name,category.Id,category.Type.ToString());
     }

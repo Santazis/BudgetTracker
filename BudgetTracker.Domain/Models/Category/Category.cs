@@ -24,11 +24,11 @@ public sealed class Category : Entity
         };
     }
 
-    public string Update(string name)
+    public void Update(string name,CategoryTypes type)
     {
-        if(name == Name) return Name;
+        if(name == Name) return;
         if(string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required");
         Name = name;
-        return name;
+        Type = type;
     }
  }

@@ -6,6 +6,19 @@ namespace BudgetTracker.Infrastructure.Services;
 
 public class RecurringCronScheduleCalculator : IRecurringCronScheduleCalculator
 {
+    public bool ValidateCronExpression(string cronExpression)
+    {
+        try
+        {
+            CrontabSchedule.Parse(cronExpression);
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
     public DateTime CalculateRunDate(string cronExpression)
     {
         var time = DateTime.UtcNow;

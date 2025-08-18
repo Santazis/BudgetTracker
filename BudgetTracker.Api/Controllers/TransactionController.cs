@@ -8,6 +8,7 @@ using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
 using BudgetTracker.Domain.Repositories.Filters;
 using BudgetTracker.Extensions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;
@@ -19,17 +20,25 @@ public class TransactionController : ControllerBase
     private Guid? UserId => User.GetUserId();
     private readonly ITransactionService _transactionService;
     private readonly ISummaryService _summaryService;
-    
-    public TransactionController(ITransactionService transactionService, ITransactionRepository transactionRepository, ISummaryService summaryService)
+    private readonly IValidator<CreateTransaction> _createTransactionValidator;
+    private readonly IValidator<UpdateTransaction> _updateTransactionValidator;
+    public TransactionController(ITransactionService transactionService,  ISummaryService summaryService, IValidator<CreateTransaction> createTransactionValidator, IValidator<UpdateTransaction> updateTransactionValidator)
     {
         _transactionService = transactionService;
         _summaryService = summaryService;
+        _createTransactionValidator = createTransactionValidator;
+        _updateTransactionValidator = updateTransactionValidator;
     }
     
     [HttpPost]
     [ProducesResponseType<TransactionDto>(200)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateTransaction request, CancellationToken cancellation)
     {
+        var validate = await _createTransactionValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());
+        }
         if (UserId is null) return Unauthorized();
         return Ok(await _transactionService.CreateTransactionAsync(request, UserId.Value, cancellation));
     }
@@ -38,6 +47,11 @@ public class TransactionController : ControllerBase
     [ProducesResponseType<TransactionDto>(200)]
     public async Task<IActionResult> UpdateTransactionAsync([FromRoute] Guid transactionId,[FromBody] UpdateTransaction request, CancellationToken cancellation)
     {
+        var validate = await _updateTransactionValidator.ValidateAsync(request, cancellation);
+        if (!validate.IsValid)
+        {
+            return BadRequest(validate.ToDictionary());
+        }
         if (UserId is null) return Unauthorized();
         return Ok(await _transactionService.UpdateTransactionAsync(transactionId, UserId.Value, request, cancellation));
     }
@@ -82,6 +96,6 @@ public class TransactionController : ControllerBase
         await _transactionService.AttachTagAsync(transactionId, UserId.Value, tagId, cancellation);
         return Ok();
     }
-    
+
 
 }

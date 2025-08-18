@@ -21,9 +21,14 @@ public class TransactionExportController : ControllerBase
         CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        var stream = await _transactionExportService.ExportToCsvAsync(UserId.Value,filter,cancellation);
         string fileName = $"transactions_{DateTime.UtcNow:yyyyMMdd}.csv";
         string contentType = "text/csv";
-        return File(stream, contentType, fileName);
+        return new FileCallbackResult(contentType, async (output, _) =>
+        {
+            await _transactionExportService.ExportToCsvAsync(UserId.Value, filter, output, cancellation);
+        })
+        {
+            FileDownloadName = fileName,
+        };
     }
 }

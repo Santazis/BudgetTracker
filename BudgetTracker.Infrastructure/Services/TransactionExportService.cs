@@ -17,11 +17,10 @@ public class TransactionExportService : ITransactionExportService
         _transactionRepository = transactionRepository;
     }
 
-    public async Task<byte[]> ExportToCsvAsync(Guid userId, TransactionFilter filter, CancellationToken cancellation)
+    public async Task ExportToCsvAsync(Guid userId, TransactionFilter filter,Stream output, CancellationToken cancellation)
     {
         var transactions =  _transactionRepository.GetTransactionsAsync( filter,userId, cancellation);
-        await using var memoryStream = new MemoryStream();
-        await using var streamWriter = new StreamWriter(memoryStream, leaveOpen: true);
+        await using var streamWriter = new StreamWriter(output, leaveOpen: true);
         await using var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture, leaveOpen: true);
         csvWriter.Context.RegisterClassMap<TransactionExportMap>();
         csvWriter.WriteHeader<Transaction>();
@@ -33,7 +32,5 @@ public class TransactionExportService : ITransactionExportService
             await csvWriter.NextRecordAsync();
         }
         await streamWriter.FlushAsync(cancellation);
-        memoryStream.Seek(0,SeekOrigin.Begin);
-        return memoryStream.ToArray();
     }
 }
