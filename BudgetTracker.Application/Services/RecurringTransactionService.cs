@@ -92,11 +92,6 @@ public class RecurringTransactionService : IRecurringTransactionService
         await _unitOfWork.SaveChangesAsync(cancellation);
     }
 
-    public Task ProcessRecurringTransactionsWithBatchesAsync(CancellationToken cancellation)
-    {
-        throw new NotImplementedException();
-    }
-
 
     public async Task DeleteAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
     {
@@ -125,5 +120,39 @@ public class RecurringTransactionService : IRecurringTransactionService
         transaction.Update(request.Description, amount, request.CronExpression);
         await _unitOfWork.SaveChangesAsync(cancellation);
     }
-    
+
+    public async Task ActivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    {
+        var transaction =
+            await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
+        if (transaction is null)
+        {
+            throw new RequestException("Recurring Transaction Not Found");
+        }
+
+        if (!transaction.IsActive)
+        {
+            var nextRunDate = _cronScheduleCalculator.CalculateRunDate(transaction.CronExpression);
+            transaction.Activate(nextRunDate);
+            await _unitOfWork.SaveChangesAsync(cancellation);
+        }
+        
+        
+    }
+
+    public async Task DeactivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    {
+        var transaction =
+            await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
+        if (transaction is null)
+        {
+            throw new RequestException("Recurring Transaction Not Found");
+        }
+
+        if (transaction.IsActive)
+        {
+            transaction.Deactivate();
+        }
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
 }

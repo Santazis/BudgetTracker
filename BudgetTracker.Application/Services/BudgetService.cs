@@ -10,6 +10,7 @@ using BudgetTracker.Domain.Repositories.Filters;
 
 namespace BudgetTracker.Application.Services;
 
+
 public class BudgetService : IBudgetService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -25,34 +26,29 @@ public class BudgetService : IBudgetService
         _categoryRepository = categoryRepository;
     }
 
+
     public async Task<IEnumerable<BudgetDto>> GetActiveBudgetsAsync(Guid userId, CancellationToken cancellation)
     {
-        var budgets = await _budgetRepository.GetActiveBudgetsByUserIdAsync(userId, cancellation);
-        if (budgets.Count == 0)
-        {
-            return [];
-        }
+        var budgets =await  _budgetRepository.GetActiveBudgetsByUserIdAsync(userId, cancellation);
+        
         var budgetDtos = new List<BudgetDto>();
-
+        var filter = new TransactionFilter()
+        {
+            From = budgets.Min(b=> b.Period.PeriodStart),
+            To = budgets.Max(b=> b.Period.PeriodEnd),
+            Categories = budgets.Select(b=>b.CategoryId).ToHashSet()
+        };
+            
+        var spentDictionary = await _transactionRepository.GetCategoriesSpentAmountAsync(userId, filter, cancellation);
         foreach (var budget in budgets)
         {
-            var filter = new TransactionFilter()
-            {
-                From = budget.Period.PeriodStart,
-                To = budget.Period.PeriodEnd,
-                Categories = [budget.CategoryId]
-            };
-            
-            var spent = await _transactionRepository.GetSpentAmountAsync(userId, filter, cancellation);
+            var spent = spentDictionary.GetValueOrDefault(budget.CategoryId, 0);
             var spentMoney = Money.Create(spent, budget.LimitAmount.Currency);
             var remaining = budget.LimitAmount - spentMoney;
-
             budgetDtos.Add(BudgetDto.FromEntity(budget, spentMoney, remaining));
         }
-
         return budgetDtos;
     }
-
     public async Task<BudgetDto> CreateBudgetAsync(CreateBudget request, Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId, userId,cancellation);

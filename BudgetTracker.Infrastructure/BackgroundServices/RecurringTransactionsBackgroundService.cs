@@ -8,11 +8,11 @@ public class RecurringTransactionsBackgroundService : IHostedService
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        RecurringJob.AddOrUpdate<IRecurringTransactionProcessingService>(
-            "RecurringTransactionProcessingService",
-            service => service.ProcessRecurringTransactionsByCursorPaginationAsync(cancellationToken),
-            Cron.Daily());
-        
+        // RecurringJob.AddOrUpdate<IRecurringTransactionProcessingService>(
+        //     "RecurringTransactionProcessingService",
+        //     service => service.ProcessRecurringTransactionsByCursorPaginationAsync(cancellationToken),
+        //     Cron.Daily());
+        //
         return Task.CompletedTask;
     }
 

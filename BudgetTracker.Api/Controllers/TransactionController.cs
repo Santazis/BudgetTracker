@@ -1,5 +1,6 @@
 ﻿
 using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Models;
 using BudgetTracker.Application.Models.Category;
 using BudgetTracker.Application.Models.Transaction;
 using BudgetTracker.Application.Models.Transaction.Requests;
@@ -73,7 +74,7 @@ public class TransactionController : ControllerBase
         if (UserId is null) return Unauthorized();
         return Ok(await _transactionService.GetTransactionsByUserIdAsync(UserId.Value, filter,request, cancellation));
     }
-    
+    [ProducesResponseType<SummaryDto>(200)]
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummaryAsync([FromQuery] TransactionFilter? filter, CancellationToken cancellation)
     {
@@ -96,6 +97,20 @@ public class TransactionController : ControllerBase
         await _transactionService.AttachTagAsync(transactionId, UserId.Value, tagId, cancellation);
         return Ok();
     }
-
-
+    
+    [HttpDelete("{transactionId:guid}/detach/tags")]
+    public async Task<IActionResult> DetachTagAsync([FromRoute]Guid transactionId,[FromBody] IEnumerable<Guid> tagIds, CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _transactionService.DetachTagsAsync(transactionId, UserId.Value, tagIds, cancellation);
+        return Ok();
+    }
+    [HttpDelete("{transactionId:guid}/detach/payment-method")]
+    public async Task<IActionResult> DetachPaymentMethodAsync([FromRoute]Guid transactionId,[FromBody] Guid paymentMethodId, CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _transactionService.DetachPaymentMethodAsync(transactionId, UserId.Value, paymentMethodId, cancellation);
+        return Ok();
+    }
+    
 }

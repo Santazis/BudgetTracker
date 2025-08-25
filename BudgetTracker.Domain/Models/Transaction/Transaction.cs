@@ -53,7 +53,7 @@ public sealed class Transaction : Entity
         if (PaymentMethodId == paymentMethodId) return;
         PaymentMethodId = paymentMethodId;
     }
-
+    public void DetachPaymentMethod(Guid paymentMethodId) => PaymentMethodId = null; 
     public void AttachTag(Guid tagId)
     {
         
@@ -66,4 +66,8 @@ public sealed class Transaction : Entity
         var transactionTag = new TransactionTag(transactionId: Id, tagId: tagId);
         _transactionTags.Add(transactionTag);
     }
+    public void DetachTags(IEnumerable<Guid> tagIds)
+    {
+        _transactionTags.RemoveAll(t => tagIds.Contains(t.TagId));
+    } 
 }

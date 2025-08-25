@@ -5,7 +5,8 @@ using BudgetTracker.Domain.Models.Transaction;
 namespace BudgetTracker.Application.Models.Transaction;
 
 public record TransactionDto(
-    Money Amount,
+    decimal Amount,
+    string Currency,
     string? Description,
     DateTime CreatedAt,
     CategoryDto Category,
@@ -17,9 +18,10 @@ public record TransactionDto(
     public static TransactionDto FromEntity(Domain.Models.Transaction.Transaction t) =>
         new TransactionDto(TransactionId: t.Id,
             Category: new CategoryDto(t.Category.Name, t.Category.Id, t.Category.Type.ToString()),
+            Amount: t.Amount.Amount,
+            Currency: t.Amount.Currency,
             UserId: t.UserId,
             Tags:t.TransactionTags.Select(t=> new TagDto(t.TagId,t.Tag.Name)),
-            Amount: t.Amount,
             PaymentMethod: t.PaymentMethod is not null
                 ? new PaymentMethodDto(t.PaymentMethodId!.Value, t.PaymentMethod.Name, t.PaymentMethod.Details,
                     t.PaymentMethod.Type.ToString())

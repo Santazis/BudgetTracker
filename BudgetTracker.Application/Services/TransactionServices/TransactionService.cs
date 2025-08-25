@@ -26,7 +26,6 @@ public class TransactionService : ITransactionService
 
     public async Task<IEnumerable<TransactionDto>> GetTransactionsByUserIdAsync(Guid userId,TransactionFilter? filter,PaginationRequest request, CancellationToken cancellation)
     {
-        Console.WriteLine(request.PageNumber);
         var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId,filter,request,cancellation);
         
         return transactions.Select(TransactionDto.FromEntity);
@@ -117,5 +116,27 @@ public class TransactionService : ITransactionService
          await _transactionRepository.CreateRangeAsync(transactions,cancellation);
          await _unitOfWork.SaveChangesAsync(cancellation);
         }
+    }
+
+    public async Task DetachTagsAsync(Guid transactionId, Guid userId, IEnumerable<Guid> tagIds, CancellationToken cancellation)
+    {
+        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
+        if (transaction is null)
+        {
+            throw new RequestException("Transaction not found");
+        }
+        transaction.DetachTags(tagIds);
+        await _unitOfWork.SaveChangesAsync(cancellation);
+    }
+
+    public async Task DetachPaymentMethodAsync(Guid transactionId, Guid userId, Guid paymentMethodId, CancellationToken cancellation)
+    {
+        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
+        if (transaction is null)
+        {
+            throw new RequestException("Transaction not found");
+        }
+        transaction.DetachPaymentMethod(paymentMethodId);
+        await _unitOfWork.SaveChangesAsync(cancellation);
     }
 }

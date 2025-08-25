@@ -37,7 +37,12 @@ public class AuthController : ControllerBase
             return BadRequest(validate.ToDictionary());
         }
 
-        await _authService.RegisterAsync(request, cancellation);
+        var result = await _authService.RegisterAsync(request, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
         return Ok();
     }
 
@@ -51,14 +56,26 @@ public class AuthController : ControllerBase
             return BadRequest(validate.ToDictionary());
         }
 
-        return Ok(await _authService.LoginAsync(request, cancellation));
+        var result = await _authService.LoginAsync(request, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpPost("refresh")]
     [ProducesResponseType<AuthResponse>(200)]
-    public async Task<IActionResult> RefreshAsync([FromBody] string refreshToken, CancellationToken cancellation)
+    public async Task<IActionResult> RefreshAsync([FromBody] RefreshRequest refreshToken,
+        CancellationToken cancellation)
     {
-        return Ok(await _authService.RefreshAsync(refreshToken, cancellation));
+        var result = await _authService.RefreshAsync(refreshToken.RefreshToken, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+        return Ok(result.Value);
     }
 
     [HttpGet("session")]
@@ -83,7 +100,11 @@ public class AuthController : ControllerBase
         if (sessionIdClaim is null) return Unauthorized();
 
         var sessionId = Guid.Parse(sessionIdClaim);
-        await _authService.LogoutAsync(UserId.Value, sessionId, cancellation);
+        var result = await _authService.LogoutAsync(UserId.Value, sessionId, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);       
+        }
         return Ok();
     }
 }

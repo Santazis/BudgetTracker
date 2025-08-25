@@ -10,21 +10,29 @@ namespace BudgetTracker.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class RecurringTransactionController(
-    IRecurringTransactionService recurringTransactionService,
-    IRecurringTransactionProcessingService recurringTransactionProcessingService)
+public class RecurringTransactionController
     : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
+    private readonly IRecurringTransactionService _recurringTransactionService;
+    private readonly IRecurringTransactionProcessingService _recurringTransactionProcessingService;
     private readonly IValidator<CreateRecurringTransaction> _createRecurringTransactionValidator;
     private readonly IValidator<UpdateRecurringTransaction> _updateRecurringTransactionValidator;
+
+    public RecurringTransactionController(IValidator<CreateRecurringTransaction> createRecurringTransactionValidator, IValidator<UpdateRecurringTransaction> updateRecurringTransactionValidator, IRecurringTransactionService recurringTransactionService, IRecurringTransactionProcessingService recurringTransactionProcessingService)
+    {
+        _createRecurringTransactionValidator = createRecurringTransactionValidator;
+        _updateRecurringTransactionValidator = updateRecurringTransactionValidator;
+        _recurringTransactionService = recurringTransactionService;
+        _recurringTransactionProcessingService = recurringTransactionProcessingService;
+    }
 
     [HttpGet]
     [ProducesResponseType<IEnumerable<RecurringTransactionDto>>(200)]
     public async Task<IActionResult> GetByUserIdAsync([FromQuery]PaginationRequest request,CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        return Ok(await recurringTransactionService.GetByUserIdAsync(UserId.Value, request,cancellation));
+        return Ok(await _recurringTransactionService.GetByUserIdAsync(UserId.Value, request,cancellation));
     }
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateRecurringTransaction request, CancellationToken cancellation)
@@ -35,14 +43,14 @@ public class RecurringTransactionController(
         {
             return BadRequest(validate.ToDictionary());    
         }
-        await recurringTransactionService.CreateRecurringTransactionAsync(request, UserId.Value, cancellation);
+        await _recurringTransactionService.CreateRecurringTransactionAsync(request, UserId.Value, cancellation);
         return Ok();
     }
     [HttpPost("{id:guid}/start")]
     public async Task<IActionResult> CreateFromRecAsync([FromRoute] Guid id, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        await recurringTransactionService.CreateTransactionFromRecurringTransactionAsync(id, UserId.Value, cancellation);
+        await _recurringTransactionService.CreateTransactionFromRecurringTransactionAsync(id, UserId.Value, cancellation);
         return Ok();
     }
     [HttpDelete("{id:guid}")]
@@ -50,7 +58,7 @@ public class RecurringTransactionController(
     {
         var userId = User.GetUserId();
         if (userId is null) return Unauthorized();
-        await recurringTransactionService.DeleteAsync(id,userId.Value,cancellation);
+        await _recurringTransactionService.DeleteAsync(id,userId.Value,cancellation);
         return Ok();
     }   
     [HttpPatch("{id:guid}")]
@@ -63,14 +71,27 @@ public class RecurringTransactionController(
         {
             return BadRequest(validate.ToDictionary());   
         }
-        await recurringTransactionService.UpdateAsync(id,userId.Value,request,cancellation);
+        await _recurringTransactionService.UpdateAsync(id,userId.Value,request,cancellation);
         return Ok();   
     }
-    
+    [HttpPatch("{id:guid}/deactivate")]
+    public async Task<IActionResult> DeactivateAsync([FromRoute] Guid id, CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _recurringTransactionService.DeactivateAsync(id, UserId.Value, cancellation);
+        return Ok();
+    }
+    [HttpPatch("{id:guid}/activate")]
+    public async Task<IActionResult> ActivateAsync([FromRoute] Guid id, CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        await _recurringTransactionService.ActivateAsync(id, UserId.Value, cancellation);
+        return Ok();
+    }
     [HttpPost("start-test-cursor")]
     public async Task<IActionResult> StartTestOffset(CancellationToken cancellation)
     {
-        await recurringTransactionProcessingService.ProcessRecurringTransactionsByCursorPaginationAsync(cancellation);
+        await _recurringTransactionProcessingService.ProcessRecurringTransactionsByCursorPaginationAsync(cancellation);
         return Ok();   
     }
 }

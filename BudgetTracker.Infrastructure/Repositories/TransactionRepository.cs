@@ -89,6 +89,16 @@ public class TransactionRepository : ITransactionRepository
         return amount;
     }
 
+    public async Task<Dictionary<Guid, decimal>> GetCategoriesSpentAmountAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    {
+        var amounts = await _context.Transactions.AsNoTracking().Where(t=> t.UserId == userId)
+            .Filter(filter)
+            .GroupBy(t=> t.Category.Id)
+            .Select(g=> new {CategoryId = g.Key, Amount = g.Sum(t=> t.Amount.Amount)})
+            .ToDictionaryAsync(g =>g.CategoryId, g=> g.Amount, cancellation);
+        return amounts;
+    }
+
     public async Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
     {
         var transactions =await _context.Transactions.AsNoTracking().Where(t => t.UserId == userId)

@@ -14,5 +14,7 @@ public interface ITransactionService
         CancellationToken cancellation);
     Task AttachPaymentMethodAsync(Guid transactionId,Guid userId, Guid paymentMethodId, CancellationToken cancellation);
     Task AttachTagAsync(Guid transactionId,Guid userId, Guid tagId, CancellationToken cancellation);
+    Task DetachTagsAsync(Guid transactionId,Guid userId,IEnumerable<Guid> tagIds, CancellationToken cancellation);
+    Task DetachPaymentMethodAsync(Guid transactionId,Guid userId, Guid paymentMethodId, CancellationToken cancellation);
     Task UploadMassTransactionsAsync(Guid userId, IEnumerable<CreateTransaction> request, CancellationToken cancellation);
 }
