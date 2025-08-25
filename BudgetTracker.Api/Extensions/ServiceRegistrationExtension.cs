@@ -37,6 +37,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IBudgetRepository, BudgetRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<ISummaryRepository, SummaryRepository>();
         services.AddScoped<IRecurringTransactionRepository,RecurringTransactionRepository>();
         return services;
     }

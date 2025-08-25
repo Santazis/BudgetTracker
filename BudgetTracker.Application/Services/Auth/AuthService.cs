@@ -6,6 +6,8 @@ using BudgetTracker.Application.Models.Auth;
 using BudgetTracker.Application.Models.Auth.Requests;
 using BudgetTracker.Application.Models.Jwt;
 using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Models.User;
 using BudgetTracker.Domain.Repositories;
@@ -32,25 +34,26 @@ public class AuthService : IAuthService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<RegisterResponse> RegisterAsync(CreateUser request, CancellationToken cancellation)
+    public async Task<Result<RegisterResponse>> RegisterAsync(CreateUser request, CancellationToken cancellation)
     {
         var email = new Email(request.Email);
         var isUserExist = await _authRepository.GetByEmailAsync(email,cancellation) is not null;
         if (isUserExist)
         {
-            throw new RequestException("User already exist");
+            return Result<RegisterResponse>.Failure(AuthErrors.UserAlreadyExist);
         }
         var userFullName = Name.Create(request.Firstname, request.Lastname);
         var user = Domain.Models.User.User.Create(userFullName, request.Username, _passwordHashService.HashPassword(request.Password), email);
         var createdUser =  await _authRepository.CreateAsync(user,cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new RegisterResponse()
+        var registerResponse = new RegisterResponse()
         {
             Email = createdUser.Email,
         };
+        return Result<RegisterResponse>.Success(registerResponse); 
     }
 
-    public async Task<AuthResponse> AuthAsync(Domain.Models.User.User user, CancellationToken cancellation)
+    public async Task<Result<AuthResponse>> AuthAsync(Domain.Models.User.User user, CancellationToken cancellation)
     {
         var refreshTokenId = Guid.NewGuid();
         var accessToken = _jwtAccessTokenService.GenerateAccessToken(user,refreshTokenId);
@@ -62,28 +65,32 @@ public class AuthService : IAuthService
         await _authRepository.RemoveUserExpiredRefreshTokensAsync(user.Id,cancellation);
         await _authRepository.AddRefreshToken(token,cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new AuthResponse(accessToken,refreshToken);
+        return Result<AuthResponse>.Success(new AuthResponse(accessToken,refreshToken));
     }
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellation)
+    public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellation)
     {
         var user = await _authRepository.GetByEmailAsync(new Email(request.Email),cancellation);
         if (user is null)
         {
-            throw new RequestException("Invalid Credentials");
+            return Result<LoginResponse>.Failure(AuthErrors.InvalidCredentials);
         }
 
         if (!_passwordHashService.VerifyPassword(request.Password,user.PasswordHash))
         {
-            throw new RequestException("Invalid Credentials");
+            return Result<LoginResponse>.Failure(AuthErrors.InvalidCredentials);
         }
-        AuthResponse authResponse = await AuthAsync(user,cancellation);
-        return new LoginResponse(authResponse,user.Email,user.IsEmailVerified);
+        Result<AuthResponse> authResponse = await AuthAsync(user,cancellation);
+        if (authResponse.IsFailure)
+        {
+           return Result<LoginResponse>.Failure(authResponse.Error);
+        }
+        return Result<LoginResponse>.Success(new LoginResponse(authResponse.Value,user.Email,user.IsEmailVerified));
     }
 
 
 
-    public async Task<AuthResponse> RefreshAsync(string refreshToken,CancellationToken cancellation)
+    public async Task<Result<AuthResponse>> RefreshAsync(string refreshToken,CancellationToken cancellation)
     {
         var tokenPrincipals = _getTokenClaimPrincipalService.GetPrincipalFromToken(refreshToken);
         var userId = tokenPrincipals.Claims.First(c => "userId" == c.Type).Value;
@@ -93,27 +100,32 @@ public class AuthService : IAuthService
         var refreshTokenEntity = await _authRepository.GetRefreshTokenAsync(userGuid,refreshTokenId,cancellation);
         if (refreshTokenEntity is null)
         {
-            throw new RequestException("Invalid Token");
+            return Result<AuthResponse>.Failure(AuthErrors.InvalidCredentials);
         }
         var user = await _authRepository.GetByIdAsync(userGuid,cancellation);
         if (user is null)
-        {
-            throw new RequestException("Invalid Token");
+        { return Result<AuthResponse>.Failure(AuthErrors.UserNotFound);
+
         }
         var authResponse = await AuthAsync(user,cancellation);
+        if (authResponse.IsFailure)
+        {
+            return Result<AuthResponse>.Failure(authResponse.Error);
+        }
         _authRepository.DeleteRefreshToken(refreshTokenEntity);
         await _unitOfWork.SaveChangesAsync(cancellation);
         return authResponse;
     }
 
-    public async Task LogoutAsync(Guid userId, Guid sessionId, CancellationToken cancellation)
+    public async Task<Result> LogoutAsync(Guid userId, Guid sessionId, CancellationToken cancellation)
     {
         var refreshToken = await _authRepository.GetRefreshTokenAsync(userId,sessionId,cancellation);
         if (refreshToken is null)
         {
-            throw new RequestException("Invalid Token");
+          return  Result.Failure(AuthErrors.InvalidToken);
         }
         _authRepository.DeleteRefreshToken(refreshToken);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 }

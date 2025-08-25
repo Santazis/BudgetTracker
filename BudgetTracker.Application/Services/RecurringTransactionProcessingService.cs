@@ -80,7 +80,7 @@ public class BatchSaveResult
                 processedTransactions++;
                 var transaction = Transaction.Create(
                     amount: recurringTransaction.Amount,
-                    createdAt: DateTime.UtcNow,
+                    createdAt: DateTime.UtcNow.AddMonths(-1),
                     paymentMethodId: recurringTransaction.PaymentMethodId,
                     categoryId: recurringTransaction.CategoryId,
                     userId: recurringTransaction.UserId,

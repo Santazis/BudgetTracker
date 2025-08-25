@@ -14,13 +14,11 @@ public class CategoryController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly ICategoryService _categoryService;
-    private readonly ISummaryService _summaryService;
     private readonly IValidator<CreateCategory> _createCategoryValidator;
     private readonly IValidator<UpdateCategory> _updateCategoryValidator;
-    public CategoryController(ICategoryService categoryService, ISummaryService summaryService, IValidator<CreateCategory> createCategoryValidator, IValidator<UpdateCategory> updateCategoryValidator)
+    public CategoryController(ICategoryService categoryService,  IValidator<CreateCategory> createCategoryValidator, IValidator<UpdateCategory> updateCategoryValidator)
     {
         _categoryService = categoryService;
-        _summaryService = summaryService;
         _createCategoryValidator = createCategoryValidator;
         _updateCategoryValidator = updateCategoryValidator;
     }
@@ -68,10 +66,13 @@ public class CategoryController : ControllerBase
     }
     
     
-    [HttpGet("top-expenses")]
-    public async Task<IActionResult> GetTopExpensesCategoriesInMonthAsync(CancellationToken cancellation)
+
+
+    [HttpDelete("{categoryId:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid categoryId, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        return Ok(await _summaryService.GetTopExpensesCategoryInMonthAsync(UserId.Value, cancellation));
+        await _categoryService.DeleteAsync(categoryId, UserId.Value, cancellation);
+        return Ok();
     }
 }
