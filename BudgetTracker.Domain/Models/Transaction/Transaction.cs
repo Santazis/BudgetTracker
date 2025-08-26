@@ -53,7 +53,7 @@ public sealed class Transaction : Entity
         if (PaymentMethodId == paymentMethodId) return;
         PaymentMethodId = paymentMethodId;
     }
-    public void DetachPaymentMethod(Guid paymentMethodId) => PaymentMethodId = null; 
+    public void DetachPaymentMethod() => PaymentMethodId = null; 
     public void AttachTag(Guid tagId)
     {
         

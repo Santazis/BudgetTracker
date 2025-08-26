@@ -20,13 +20,11 @@ public class TransactionController : ControllerBase
 {
     private Guid? UserId => User.GetUserId();
     private readonly ITransactionService _transactionService;
-    private readonly ISummaryService _summaryService;
     private readonly IValidator<CreateTransaction> _createTransactionValidator;
     private readonly IValidator<UpdateTransaction> _updateTransactionValidator;
-    public TransactionController(ITransactionService transactionService,  ISummaryService summaryService, IValidator<CreateTransaction> createTransactionValidator, IValidator<UpdateTransaction> updateTransactionValidator)
+    public TransactionController(ITransactionService transactionService,   IValidator<CreateTransaction> createTransactionValidator, IValidator<UpdateTransaction> updateTransactionValidator)
     {
         _transactionService = transactionService;
-        _summaryService = summaryService;
         _createTransactionValidator = createTransactionValidator;
         _updateTransactionValidator = updateTransactionValidator;
     }
@@ -41,7 +39,12 @@ public class TransactionController : ControllerBase
             return BadRequest(validate.ToDictionary());
         }
         if (UserId is null) return Unauthorized();
-        return Ok(await _transactionService.CreateTransactionAsync(request, UserId.Value, cancellation));
+        var result = await _transactionService.CreateTransactionAsync(request, UserId.Value, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+        return Ok();
     }
     
     [HttpPatch("{transactionId:guid}")]
@@ -54,14 +57,23 @@ public class TransactionController : ControllerBase
             return BadRequest(validate.ToDictionary());
         }
         if (UserId is null) return Unauthorized();
-        return Ok(await _transactionService.UpdateTransactionAsync(transactionId, UserId.Value, request, cancellation));
+        var result = await _transactionService.UpdateTransactionAsync(transactionId, UserId.Value, request, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);       
+        }
+        return Ok(result.Value);
     }
     
     [HttpDelete("{transactionId:guid}")]
     public async Task<IActionResult> DeleteTransactionAsync([FromRoute]Guid transactionId, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        await _transactionService.DeleteTransactionAsync(transactionId, UserId.Value, cancellation);
+        var result = await _transactionService.DeleteTransactionAsync(transactionId, UserId.Value, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);       
+        }
         return Ok();
     }
     
@@ -74,43 +86,7 @@ public class TransactionController : ControllerBase
         if (UserId is null) return Unauthorized();
         return Ok(await _transactionService.GetTransactionsByUserIdAsync(UserId.Value, filter,request, cancellation));
     }
-    [ProducesResponseType<SummaryDto>(200)]
-    [HttpGet("summary")]
-    public async Task<IActionResult> GetSummaryAsync([FromQuery] TransactionFilter? filter, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        return Ok(await _summaryService.GetSummaryAsync(UserId.Value, filter, cancellation));
-    }
-    
-    [HttpPost("{transactionId:guid}/attach/payment-method")]
-    public async Task<IActionResult> AttachPaymentMethodAsync([FromRoute]Guid transactionId,[FromBody] Guid paymentMethodId, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        await _transactionService.AttachPaymentMethodAsync(transactionId, UserId.Value, paymentMethodId, cancellation);
-        return Ok();
-    }
-    
-    [HttpPost("{transactionId:guid}/attach/tag")]
-    public async Task<IActionResult> AttachTagAsync([FromRoute]Guid transactionId,[FromBody] Guid tagId, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        await _transactionService.AttachTagAsync(transactionId, UserId.Value, tagId, cancellation);
-        return Ok();
-    }
-    
-    [HttpDelete("{transactionId:guid}/detach/tags")]
-    public async Task<IActionResult> DetachTagAsync([FromRoute]Guid transactionId,[FromBody] IEnumerable<Guid> tagIds, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        await _transactionService.DetachTagsAsync(transactionId, UserId.Value, tagIds, cancellation);
-        return Ok();
-    }
-    [HttpDelete("{transactionId:guid}/detach/payment-method")]
-    public async Task<IActionResult> DetachPaymentMethodAsync([FromRoute]Guid transactionId,[FromBody] Guid paymentMethodId, CancellationToken cancellation)
-    {
-        if (UserId is null) return Unauthorized();
-        await _transactionService.DetachPaymentMethodAsync(transactionId, UserId.Value, paymentMethodId, cancellation);
-        return Ok();
-    }
+
+
     
 }

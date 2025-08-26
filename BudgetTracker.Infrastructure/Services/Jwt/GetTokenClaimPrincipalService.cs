@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using BudgetTracker.Application.Interfaces.Jwt;
 using BudgetTracker.Application.Models.Jwt;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -17,7 +19,7 @@ public class GetTokenClaimPrincipalService : IGetTokenClaimPrincipalService
         _jwtSettings = jwtSettings;
     }
 
-    public ClaimsPrincipal GetPrincipalFromToken(string token)
+    public Result<ClaimsPrincipal> GetPrincipalFromToken(string token)
     {
         var tokenValidationParameters = new TokenValidationParameters()
         {
@@ -36,8 +38,8 @@ public class GetTokenClaimPrincipalService : IGetTokenClaimPrincipalService
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                 StringComparison.InvariantCultureIgnoreCase))
         {
-            throw new RequestException("Invalid token");
+            return Result<ClaimsPrincipal>.Failure(AuthErrors.InvalidToken);
         }
-        return principal;
+        return Result<ClaimsPrincipal>.Success(principal);
     }
 }

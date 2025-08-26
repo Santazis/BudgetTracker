@@ -56,6 +56,8 @@ public static class ServiceRegistrationExtension
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITransactionImportService, TransactionImportService>();
         services.AddScoped<ITransactionExportService, TransactionExportService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<IPaymentMethodService, PaymentMethodService>();
         services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
         services.AddScoped<IRecurringTransactionProcessingService, RecurringTransactionProcessingService>();
         return services;

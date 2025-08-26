@@ -1,6 +1,8 @@
 ﻿using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Application.Models.User;
 using BudgetTracker.Application.Models.User.Requests;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
@@ -12,6 +14,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITagRepository _tagRepository;
+
     public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, ITagRepository tagRepository)
     {
         _userRepository = userRepository;
@@ -19,55 +22,60 @@ public class UserService : IUserService
         _tagRepository = tagRepository;
     }
 
-    public async Task<UserDto> GetByIdAsync(Guid userId, CancellationToken cancellation)
+    public async Task<Result<UserDto>> GetByIdAsync(Guid userId, CancellationToken cancellation)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellation);
         if (user is null)
         {
-            throw new RequestException("User not found");
+            return Result<UserDto>.Failure(UserErrors.UserNotFound);
         }
-        
-        return UserDto.FromEntity(user);
+
+        return Result<UserDto>.Success(UserDto.FromEntity(user));
     }
 
-    public async Task AddPaymentMethod(Guid userId, CreatePaymentMethod request, CancellationToken cancellation)
+    public async Task<Result> AddPaymentMethod(Guid userId, CreatePaymentMethod request, CancellationToken cancellation)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellation);
         if (user is null)
         {
-            throw new RequestException("User not found");
+            return Result<UserDto>.Failure(UserErrors.UserNotFound);
         }
 
         user.AddPaymentMethod(request.Type, request.Name, request.Details);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task DeletePaymentMethodAsync(Guid userId, Guid paymentMethodId, CancellationToken cancellation)
+    public async Task<Result> DeletePaymentMethodAsync(Guid userId, Guid paymentMethodId, CancellationToken cancellation)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellation);
         if (user is null)
         {
-            throw new RequestException("User not found");
+            return Result<UserDto>.Failure(UserErrors.UserNotFound);
         }
+
         user.DeletePaymentMethod(paymentMethodId);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task UpdatePaymentMethodAsync(Guid userId, Guid paymentMethodId, UpdatePaymentMethod request,
+    public async Task<Result> UpdatePaymentMethodAsync(Guid userId, Guid paymentMethodId, UpdatePaymentMethod request,
         CancellationToken cancellation)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellation);
         if (user is null)
         {
-            throw new RequestException("User not found");
+            return Result<UserDto>.Failure(UserErrors.UserNotFound);
         }
-        user.UpdatePaymentMethod(paymentMethodId,request.Name,request.Details,request.Type);
+
+        user.UpdatePaymentMethod(paymentMethodId, request.Name, request.Details, request.Type);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
     public async Task<IEnumerable<Tag>> GetUserTagsAsync(Guid userId, CancellationToken cancellation)
     {
-        var tags = await _tagRepository.GetUserTagsAsync(userId,cancellation);
+        var tags = await _tagRepository.GetUserTagsAsync(userId, cancellation);
         return tags;
     }
 }

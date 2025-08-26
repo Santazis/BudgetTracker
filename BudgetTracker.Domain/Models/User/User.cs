@@ -54,6 +54,10 @@ public sealed class User : Entity
         paymentMethod.Type = type;
     }
 
+    public bool HasPaymentMethod(Guid id)
+    {
+        return _paymentMethods.Any(m=>m.Id == id);
+    }
     public void DeletePaymentMethod(Guid id)
     {
         var paymentMethod = _paymentMethods.FirstOrDefault(m=>m.Id == id);

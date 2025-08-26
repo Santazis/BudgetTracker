@@ -3,6 +3,8 @@ using BudgetTracker.Application.Models.Category;
 using BudgetTracker.Application.Models.Transaction;
 using BudgetTracker.Application.Models.Transaction.Requests;
 using BudgetTracker.Application.Models.User;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.Models.Transaction;
@@ -31,12 +33,12 @@ public class TransactionService : ITransactionService
         return transactions.Select(TransactionDto.FromEntity);
     }
 
-    public async Task<TransactionDto> CreateTransactionAsync(CreateTransaction request,Guid userId, CancellationToken cancellation)
+    public async Task<Result<TransactionDto>> CreateTransactionAsync(CreateTransaction request,Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId,userId,cancellation);
         if (category is null)
         {
-            throw new RequestException("Category not found");
+            return Result<TransactionDto>.Failure(CategoryErrors.CategoryNotFound);
         }
         var transaction = Transaction.Create(
             amount: Money.Create(request.Amount, request.Currency),
@@ -47,27 +49,28 @@ public class TransactionService : ITransactionService
             description: request.Description);
         await _transactionRepository.CreateAsync(transaction, cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return  TransactionDto.FromEntity(transaction);
+        return  Result<TransactionDto>.Success(TransactionDto.FromEntity(transaction));
     }
 
-    public async Task DeleteTransactionAsync(Guid transactionId,Guid userId, CancellationToken cancellation)
+    public async Task<Result> DeleteTransactionAsync(Guid transactionId,Guid userId, CancellationToken cancellation)
     {
         var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Transaction not found");
+            return Result.Failure(TransactionErrors.TransactionNotFound);
         }
         _transactionRepository.Delete(transaction);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task<TransactionDto> UpdateTransactionAsync(Guid transactionId,Guid userId, UpdateTransaction request,
+    public async Task<Result<TransactionDto>> UpdateTransactionAsync(Guid transactionId,Guid userId, UpdateTransaction request,
         CancellationToken cancellation)
     {
         var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Transaction not found");
+            return Result<TransactionDto>.Failure(TransactionErrors.TransactionNotFound);
         }
         
         
@@ -76,30 +79,10 @@ public class TransactionService : ITransactionService
             amount:amountMoney,
             description:request.Description);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return TransactionDto.FromEntity(transaction);
+        return Result<TransactionDto>.Success(TransactionDto.FromEntity(transaction)); 
     }
+    
 
-    public async Task AttachPaymentMethodAsync(Guid transactionId, Guid userId, Guid paymentMethodId, CancellationToken cancellation)
-    {
-        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
-        if (transaction is null)
-        {
-            throw new RequestException("Transaction not found");
-        }
-        transaction.AttachPaymentMethod(paymentMethodId);
-        await _unitOfWork.SaveChangesAsync(cancellation);
-    }
-
-    public async Task AttachTagAsync(Guid transactionId, Guid userId, Guid tagId, CancellationToken cancellation)
-    {
-        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
-        if (transaction is null)
-        {   
-            throw new RequestException("Transaction not found");
-        }
-        transaction.AttachTag(tagId);
-        await _unitOfWork.SaveChangesAsync(cancellation);
-    }
 
     public async Task UploadMassTransactionsAsync(Guid userId, IEnumerable<CreateTransaction> request, CancellationToken cancellation)
     {
@@ -117,26 +100,5 @@ public class TransactionService : ITransactionService
          await _unitOfWork.SaveChangesAsync(cancellation);
         }
     }
-
-    public async Task DetachTagsAsync(Guid transactionId, Guid userId, IEnumerable<Guid> tagIds, CancellationToken cancellation)
-    {
-        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
-        if (transaction is null)
-        {
-            throw new RequestException("Transaction not found");
-        }
-        transaction.DetachTags(tagIds);
-        await _unitOfWork.SaveChangesAsync(cancellation);
-    }
-
-    public async Task DetachPaymentMethodAsync(Guid transactionId, Guid userId, Guid paymentMethodId, CancellationToken cancellation)
-    {
-        var transaction = await _transactionRepository.GetByIdAsync(transactionId, userId,cancellation);
-        if (transaction is null)
-        {
-            throw new RequestException("Transaction not found");
-        }
-        transaction.DetachPaymentMethod(paymentMethodId);
-        await _unitOfWork.SaveChangesAsync(cancellation);
-    }
+    
 }

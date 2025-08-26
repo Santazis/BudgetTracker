@@ -1,4 +1,6 @@
 ﻿using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Models;
+using BudgetTracker.Domain.Repositories.Filters;
 using BudgetTracker.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,5 +28,12 @@ public class ReportController : ControllerBase
     {
         if (UserId is null) return Unauthorized();
         return Ok(await _summaryService.GetMonthlySpendingComparisonAsync(UserId.Value, cancellation));
+    }
+    [ProducesResponseType<SummaryDto>(200)]
+    [HttpGet("transaction-summary")]
+    public async Task<IActionResult> GetSummaryAsync([FromQuery] TransactionFilter? filter, CancellationToken cancellation)
+    {
+        if (UserId is null) return Unauthorized();
+        return Ok(await _summaryService.GetSummaryAsync(UserId.Value, filter, cancellation));
     }
 }
