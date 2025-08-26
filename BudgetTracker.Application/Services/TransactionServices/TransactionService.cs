@@ -44,7 +44,7 @@ public class TransactionService : ITransactionService
             amount: Money.Create(request.Amount, request.Currency),
             categoryId: request.CategoryId,
             userId: userId,
-            createdAt:DateTime.UtcNow, 
+            createdAt:request.CreatedAt,
             paymentMethodId:request.PaymentMethodId,
             description: request.Description);
         await _transactionRepository.CreateAsync(transaction, cancellation);

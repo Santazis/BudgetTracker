@@ -1,8 +1,10 @@
 ﻿using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Interfaces.Analytics;
 using BudgetTracker.Application.Interfaces.Auth;
 using BudgetTracker.Application.Interfaces.Category;
 using BudgetTracker.Application.Interfaces.Jwt;
 using BudgetTracker.Application.Services;
+using BudgetTracker.Application.Services.Analytics;
 using BudgetTracker.Application.Services.Auth;
 using BudgetTracker.Application.Services.CategoryServices;
 using BudgetTracker.Application.Services.TransactionServices;
@@ -39,6 +41,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISummaryRepository, SummaryRepository>();
         services.AddScoped<IRecurringTransactionRepository,RecurringTransactionRepository>();
+        services.AddScoped<IBudgetAnalyticService, BudgetAnalyticService>();
         return services;
     }
 

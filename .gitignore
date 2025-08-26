@@ -483,3 +483,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # Vim temporary swap files
+/ConsoleApp1/EfCoreBenchmarks.cs
+/ConsoleApp1/ConsoleApp1.csproj

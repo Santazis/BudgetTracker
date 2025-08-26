@@ -102,7 +102,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
     {
         var transactions =await _context.Transactions.AsNoTracking().Where(t => t.UserId == userId)
-            .Filter(filter).ToListAsync(cancellation);
+            .Filter(filter).Include(t=> t.Category).ToListAsync(cancellation);
         return transactions;
     }
 }
