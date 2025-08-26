@@ -2,6 +2,8 @@
 using BudgetTracker.Application.Interfaces.Category;
 using BudgetTracker.Application.Models.Category;
 using BudgetTracker.Application.Models.Category.Requests;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Models.Category;
 using BudgetTracker.Domain.Repositories;
@@ -38,33 +40,30 @@ public class CategoryService : ICategoryService
         return categories.Select(c=> new CategoryDto(c.Name,c.Id,c.Type.ToString()));
     }
 
-    public async Task<CategoryDto> GetByIdAsync(Guid id,Guid userId, CancellationToken cancellation)
+    public async Task<Result<CategoryDto>> GetByIdAsync(Guid id,Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(id,userId,cancellation);
-        if (category is null) throw new RequestException("Category not found");
-        return new CategoryDto(category.Name,category.Id,category.Type.ToString());
+        if (category is null) return Result<CategoryDto>.Failure(CategoryErrors.CategoryNotFound);
+        return Result<CategoryDto>.Success(new CategoryDto(category.Name,category.Id,category.Type.ToString()));
     }
 
-    public async Task DeleteAsync(Guid categoryId,Guid userId, CancellationToken cancellation)
+    public async Task<Result> DeleteAsync(Guid categoryId,Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(categoryId,userId,cancellation);
-        if(category is null) throw new RequestException("Category not found");
+        if (category is null) return Result<CategoryDto>.Failure(CategoryErrors.CategoryNotFound);
         _categoryRepository.DeleteAsync(category);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task<CategoryDto> UpdateCategoryAsync(UpdateCategory request,Guid categoryId,Guid userId, CancellationToken cancellation)
+    public async Task<Result<CategoryDto>> UpdateCategoryAsync(UpdateCategory request,Guid categoryId,Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(categoryId,userId,cancellation);
-        if (category is null) throw new RequestException("Category not found");
-        if (category.IsSystem) throw new RequestException("Cannot update system category");
+        if (category is null) return Result<CategoryDto>.Failure(CategoryErrors.CategoryNotFound);
+        if (category.IsSystem) return Result<CategoryDto>.Failure(CategoryErrors.TryingUpdateSystemCategory);
         category.Update(request.Name,request.Type);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new CategoryDto(category.Name,category.Id,category.Type.ToString());
+        return Result<CategoryDto>.Success(new CategoryDto(category.Name,category.Id,category.Type.ToString()));
     }
-
-    public Task DeleteAsync(Guid categoryId, CancellationToken cancellation)
-    {
-        throw new NotImplementedException();
-    }
+    
 }

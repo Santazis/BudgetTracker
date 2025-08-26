@@ -31,7 +31,9 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetByIdAsync(CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        return Ok(await _userService.GetByIdAsync(UserId.Value, cancellation));
+        var result = await _userService.GetByIdAsync(UserId.Value, cancellation);
+        if (result.IsFailure) return BadRequest(result.Error);
+        return Ok(result.Value);
     }
 
     [HttpPost("payment-method")]
@@ -44,7 +46,9 @@ public class UserController : ControllerBase
         {
             return BadRequest(validate.ToDictionary());       
         }
-        await _userService.AddPaymentMethod(UserId.Value, request, cancellation);
+        var result = await _userService.AddPaymentMethod(UserId.Value, request, cancellation);
+        if (result.IsFailure) return BadRequest(result.Error);
+
         return Ok();
     }
 
@@ -58,7 +62,9 @@ public class UserController : ControllerBase
         {
             return BadRequest(validate.ToDictionary());       
         }
-        await _userService.UpdatePaymentMethodAsync(UserId.Value, paymentMethodId, request, cancellation);
+        var result = await _userService.UpdatePaymentMethodAsync(UserId.Value, paymentMethodId, request, cancellation);
+        if (result.IsFailure) return BadRequest(result.Error);
+
         return Ok();
     }
 
@@ -67,7 +73,9 @@ public class UserController : ControllerBase
         CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        await _userService.DeletePaymentMethodAsync(UserId.Value, paymentMethodId, cancellation);
+        var result = await _userService.DeletePaymentMethodAsync(UserId.Value, paymentMethodId, cancellation);
+        if (result.IsFailure) return BadRequest(result.Error);
+
         return Ok();
     }
 

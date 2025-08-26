@@ -1,8 +1,9 @@
 ﻿using System.Security.Claims;
+using BudgetTracker.Domain.Common;
 
 namespace BudgetTracker.Application.Interfaces.Jwt;
 
 public interface IGetTokenClaimPrincipalService
 {
-    ClaimsPrincipal GetPrincipalFromToken(string token);
+    Result<ClaimsPrincipal> GetPrincipalFromToken(string token);
 }

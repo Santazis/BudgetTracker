@@ -93,18 +93,22 @@ public class AuthService : IAuthService
     public async Task<Result<AuthResponse>> RefreshAsync(string refreshToken,CancellationToken cancellation)
     {
         var tokenPrincipals = _getTokenClaimPrincipalService.GetPrincipalFromToken(refreshToken);
-        var userId = tokenPrincipals.Claims.First(c => "userId" == c.Type).Value;
-        var tokenId = tokenPrincipals.Claims.First(c => ClaimTypes.Sid == c.Type).Value;
+        if (tokenPrincipals.IsFailure)
+        {
+            return Result<AuthResponse>.Failure(tokenPrincipals.Error);
+        }
+        var userId = tokenPrincipals.Value.Claims.First(c => "userId" == c.Type).Value;
+        var tokenId = tokenPrincipals.Value.Claims.First(c => ClaimTypes.Sid == c.Type).Value;
         var refreshTokenId = Guid.Parse(tokenId);
         var userGuid = Guid.Parse(userId);
         var refreshTokenEntity = await _authRepository.GetRefreshTokenAsync(userGuid,refreshTokenId,cancellation);
         if (refreshTokenEntity is null)
         {
-            return Result<AuthResponse>.Failure(AuthErrors.InvalidCredentials);
+            return Result<AuthResponse>.Failure(AuthErrors.RefreshTokenNotFound);
         }
         var user = await _authRepository.GetByIdAsync(userGuid,cancellation);
         if (user is null)
-        { return Result<AuthResponse>.Failure(AuthErrors.UserNotFound);
+        { return Result<AuthResponse>.Failure(UserErrors.UserNotFound);
 
         }
         var authResponse = await AuthAsync(user,cancellation);

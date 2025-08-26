@@ -2,6 +2,8 @@
 using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Application.Models.RecurringTransaction;
 using BudgetTracker.Application.Models.RecurringTransaction.Requests;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Common.Pagination;
 using BudgetTracker.Domain.DomainServices;
@@ -64,7 +66,7 @@ public class RecurringTransactionService : IRecurringTransactionService
         }
     }
 
-    public async Task CreateTransactionFromRecurringTransactionAsync(Guid recurringTransactionId, Guid userId,
+    public async Task<Result> CreateTransactionFromRecurringTransactionAsync(Guid recurringTransactionId, Guid userId,
         CancellationToken cancellation)
     {
         var recurringTransaction =
@@ -72,7 +74,7 @@ public class RecurringTransactionService : IRecurringTransactionService
 
         if (recurringTransaction == null)
         {
-            throw new RequestException("Recurring Transaction Not Found");
+            return Result.Failure(RecurringTransactionErrors.RecurringTransactionNotFound);
         }
 
 
@@ -90,44 +92,47 @@ public class RecurringTransactionService : IRecurringTransactionService
         recurringTransaction.UpdateNextRun(nextRunDate);
         await _transactionRepository.CreateAsync(transaction, cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
 
-    public async Task DeleteAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    public async Task<Result> DeleteAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
     {
         var transaction =
             await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Recurring Transaction Not Found");
+            return Result.Failure(RecurringTransactionErrors.RecurringTransactionNotFound);
         }
 
         _recurringTransactionRepository.Delete(transaction);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task UpdateAsync(Guid recurringTransactionId, Guid userId, UpdateRecurringTransaction request,
+    public async Task<Result> UpdateAsync(Guid recurringTransactionId, Guid userId, UpdateRecurringTransaction request,
         CancellationToken cancellation)
     {
         var transaction =
             await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Recurring Transaction Not Found");
+            return Result.Failure(RecurringTransactionErrors.RecurringTransactionNotFound);
         }
 
         var amount = Money.Create(request.Amount, request.Currency);
         transaction.Update(request.Description, amount, request.CronExpression);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 
-    public async Task ActivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    public async Task<Result> ActivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
     {
         var transaction =
             await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Recurring Transaction Not Found");
+            return Result.Failure(RecurringTransactionErrors.RecurringTransactionNotFound);
         }
 
         if (!transaction.IsActive)
@@ -136,23 +141,25 @@ public class RecurringTransactionService : IRecurringTransactionService
             transaction.Activate(nextRunDate);
             await _unitOfWork.SaveChangesAsync(cancellation);
         }
-        
-        
+
+        return Result.Success;
     }
 
-    public async Task DeactivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
+    public async Task<Result> DeactivateAsync(Guid recurringTransactionId, Guid userId, CancellationToken cancellation)
     {
         var transaction =
             await _recurringTransactionRepository.GetByIdAsync(recurringTransactionId, userId, cancellation);
         if (transaction is null)
         {
-            throw new RequestException("Recurring Transaction Not Found");
+            return Result.Failure(RecurringTransactionErrors.RecurringTransactionNotFound);
         }
 
         if (transaction.IsActive)
         {
             transaction.Deactivate();
         }
+
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 }

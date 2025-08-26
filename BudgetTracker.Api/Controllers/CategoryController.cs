@@ -16,16 +16,18 @@ public class CategoryController : ControllerBase
     private readonly ICategoryService _categoryService;
     private readonly IValidator<CreateCategory> _createCategoryValidator;
     private readonly IValidator<UpdateCategory> _updateCategoryValidator;
-    public CategoryController(ICategoryService categoryService,  IValidator<CreateCategory> createCategoryValidator, IValidator<UpdateCategory> updateCategoryValidator)
+
+    public CategoryController(ICategoryService categoryService, IValidator<CreateCategory> createCategoryValidator,
+        IValidator<UpdateCategory> updateCategoryValidator)
     {
         _categoryService = categoryService;
         _createCategoryValidator = createCategoryValidator;
         _updateCategoryValidator = updateCategoryValidator;
     }
-    
+
     [HttpPost]
     [ProducesResponseType<CategoryDto>(200)]
-    public async Task<IActionResult> CreateAsync([FromBody]CreateCategory request, CancellationToken cancellation)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateCategory request, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
         var validate = await _createCategoryValidator.ValidateAsync(request, cancellation);
@@ -33,9 +35,10 @@ public class CategoryController : ControllerBase
         {
             return BadRequest(validate.ToDictionary());
         }
-        return Ok(await _categoryService.CreateAsync(request,UserId.Value, cancellation));
+
+        return Ok(await _categoryService.CreateAsync(request, UserId.Value, cancellation));
     }
-    
+
     [HttpGet]
     [ProducesResponseType<IEnumerable<CategoryDto>>(200)]
     public async Task<IActionResult> GetUserCategoriesAsync(CancellationToken cancellation)
@@ -43,10 +46,11 @@ public class CategoryController : ControllerBase
         if (UserId is null) return Unauthorized();
         return Ok(await _categoryService.GetUserCategoriesAsync(UserId.Value, cancellation));
     }
-    
+
     [HttpPatch("{categoryId:guid}")]
     [ProducesResponseType<CategoryDto>(200)]
-    public async Task<IActionResult> UpdateCategoryAsync(UpdateCategory request,[FromRoute] Guid categoryId, CancellationToken cancellation)
+    public async Task<IActionResult> UpdateCategoryAsync(UpdateCategory request, [FromRoute] Guid categoryId,
+        CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
         var validate = await _updateCategoryValidator.ValidateAsync(request, cancellation);
@@ -54,25 +58,39 @@ public class CategoryController : ControllerBase
         {
             return BadRequest(validate.ToDictionary());
         }
-        return Ok(await _categoryService.UpdateCategoryAsync(request, categoryId, UserId.Value, cancellation));
+        var result = await _categoryService.UpdateCategoryAsync(request,categoryId,UserId.Value,cancellation);;
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);       
+        }
+
+        return Ok(result.Value);
     }
-    
+
     [HttpGet("{categoryId:guid}")]
     [ProducesResponseType<CategoryDto>(200)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid categoryId, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        return Ok(await _categoryService.GetByIdAsync(categoryId, UserId.Value, cancellation));
+        var result = await _categoryService.GetByIdAsync(categoryId, UserId.Value, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
     }
-    
-    
 
 
     [HttpDelete("{categoryId:guid}")]
     public async Task<IActionResult> DeleteAsync(Guid categoryId, CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
-        await _categoryService.DeleteAsync(categoryId, UserId.Value, cancellation);
+        var result = await _categoryService.DeleteAsync(categoryId, UserId.Value, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
         return Ok();
     }
 }

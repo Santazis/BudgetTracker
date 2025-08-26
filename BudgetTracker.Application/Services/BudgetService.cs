@@ -2,6 +2,8 @@
 using BudgetTracker.Application.Models.Budget;
 using BudgetTracker.Application.Models.Budget.Requests;
 using BudgetTracker.Application.Models.Transaction;
+using BudgetTracker.Domain.Common;
+using BudgetTracker.Domain.Common.Errors;
 using BudgetTracker.Domain.Common.Exceptions;
 using BudgetTracker.Domain.Models.Budget;
 using BudgetTracker.Domain.Models.Transaction;
@@ -49,12 +51,12 @@ public class BudgetService : IBudgetService
         }
         return budgetDtos;
     }
-    public async Task<BudgetDto> CreateBudgetAsync(CreateBudget request, Guid userId, CancellationToken cancellation)
+    public async Task<Result<BudgetDto>> CreateBudgetAsync(CreateBudget request, Guid userId, CancellationToken cancellation)
     {
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId, userId,cancellation);
         if (category is null)
         {
-            throw new RequestException("Category not found");
+           return Result<BudgetDto>.Failure(CategoryErrors.CategoryNotFound);
         }
         var period = BudgetPeriod.Create(request.PeriodStart, request.PeriodEnd);
         var amount = Money.Create(request.LimitAmount, request.Currency);
@@ -62,17 +64,17 @@ public class BudgetService : IBudgetService
             amount, period);
         await _budgetRepository.AddAsync(budget, cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new BudgetDto(budget.Id, budget.Name, budget.Description, budget.LimitAmount,
+        return Result<BudgetDto>.Success(new BudgetDto(budget.Id, budget.Name, budget.Description, budget.LimitAmount,
             Money.Create(0, request.Currency), amount, PeriodStart: request.PeriodStart,
-            PeriodEnd: request.PeriodEnd, IsExceeded: false, CreatedAt: budget.CreatedAt);
+            PeriodEnd: request.PeriodEnd, IsExceeded: false, CreatedAt: budget.CreatedAt));
     }
 
-    public async Task<BudgetDto> GetBudgetById(Guid id, Guid userId, CancellationToken cancellation)
+    public async Task<Result<BudgetDto>> GetBudgetById(Guid id, Guid userId, CancellationToken cancellation)
     {
         var budget = await _budgetRepository.GetByIdAsync(id, userId, cancellation);
         if (budget is null)
         {
-            throw new RequestException("Budget not found");
+            return Result<BudgetDto>.Failure(BudgetErrors.BudgetNotFound);
         }
 
         var filter = new TransactionFilter()
@@ -84,16 +86,16 @@ public class BudgetService : IBudgetService
         var spent = await _transactionRepository.GetSpentAmountAsync(userId, filter, cancellation);
         var spentMoney = Money.Create(spent, budget.LimitAmount.Currency);
         var remaining = budget.LimitAmount - spentMoney;
-        return BudgetDto.FromEntity(budget, spentMoney, remaining);
+        return Result<BudgetDto>.Success( BudgetDto.FromEntity(budget, spentMoney, remaining));
     }
 
-    public async Task<BudgetDto> UpdateAsync(UpdateBudget request, Guid budgetId, Guid userId,
+    public async Task<Result<BudgetDto>> UpdateAsync(UpdateBudget request, Guid budgetId, Guid userId,
         CancellationToken cancellation)
     {
         var budget = await _budgetRepository.GetByIdAsync(budgetId, userId, cancellation);
         if (budget is null)
         {
-            throw new RequestException("Budget not found");
+            return Result<BudgetDto>.Failure(BudgetErrors.BudgetNotFound);
         }
 
         var limitAmount = Money.Create(request.LimitAmount, request.Currency);
@@ -104,19 +106,20 @@ public class BudgetService : IBudgetService
             name: request.Name,
             description: request.Description);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new BudgetDto(budget.Id, budget.Name, budget.Description, budget.LimitAmount,
+        return Result<BudgetDto>.Success( new BudgetDto(budget.Id, budget.Name, budget.Description, budget.LimitAmount,
             Money.Create(0, request.Currency), limitAmount, PeriodStart: request.PeriodStart,
-            PeriodEnd: request.PeriodEnd, IsExceeded: false, CreatedAt: budget.CreatedAt);
+            PeriodEnd: request.PeriodEnd, IsExceeded: false, CreatedAt: budget.CreatedAt));
     }
 
-    public async Task DeleteAsync(Guid budgetId, Guid userId, CancellationToken cancellation)
+    public async Task<Result> DeleteAsync(Guid budgetId, Guid userId, CancellationToken cancellation)
     {
         var budget = await _budgetRepository.GetByIdAsync(budgetId, userId,cancellation);
         if (budget is null)
         {
-            throw new RequestException("Budget not found");
+            return Result<BudgetDto>.Failure(BudgetErrors.BudgetNotFound);
         }
         _budgetRepository.Delete(budget);
         await _unitOfWork.SaveChangesAsync(cancellation);
+        return Result.Success;
     }
 }
