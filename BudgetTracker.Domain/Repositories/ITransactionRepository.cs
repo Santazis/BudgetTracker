@@ -18,5 +18,5 @@ public interface ITransactionRepository
     Task<Dictionary<Guid,decimal>> GetCategoriesSpentAmountAsync(Guid userId,TransactionFilter? filter,CancellationToken cancellation);
     void Delete(Transaction transaction);
     Task CreateRangeAsync(IEnumerable<Transaction> transactions,CancellationToken cancellation);
-    Task<int> CountAsync(Guid userId,CancellationToken cancellation);
+    Task<int> CountAsync(Guid userId,TransactionFilter? filter, CancellationToken cancellation);
 }

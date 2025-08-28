@@ -86,7 +86,14 @@ public class TransactionController : ControllerBase
         if (UserId is null) return Unauthorized();
         return Ok(await _transactionService.GetTransactionsByUserIdAsync(UserId.Value, filter,request, cancellation));
     }
-
+    [HttpGet("count")]
+    [ProducesResponseType<int>(200)]
+    public async Task<IActionResult> GetTransactionsCountAsync(CancellationToken cancellation,
+        [FromQuery] TransactionFilter? filter)
+    {
+        if (UserId is null) return Unauthorized();
+        return Ok(await _transactionService.CountAsync(UserId.Value, filter, cancellation));
+    }
 
     
 }

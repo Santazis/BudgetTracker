@@ -1,12 +1,9 @@
-﻿using BudgetTracker.Application.Interfaces;
-using BudgetTracker.Application.Interfaces.Auth;
+﻿using BudgetTracker.Application.Interfaces.Auth;
 using BudgetTracker.Application.Models.Auth;
 using BudgetTracker.Application.Models.Auth.Requests;
 using BudgetTracker.Application.Models.User.Requests;
-using BudgetTracker.Application.Validators.Auth;
 using BudgetTracker.Extensions;
 using FluentValidation;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BudgetTracker.Controllers;

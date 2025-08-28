@@ -1,4 +1,4 @@
-﻿namespace BudgetTracker.Application.Models.Auth;
+﻿namespace BudgetTracker.Application.Models.Auth.Requests;
 
 public class RefreshRequest
 {

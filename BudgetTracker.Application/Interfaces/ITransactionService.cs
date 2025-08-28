@@ -14,4 +14,5 @@ public interface ITransactionService
     Task<Result<TransactionDto>> UpdateTransactionAsync(Guid transactionId,Guid userId, UpdateTransaction request,
         CancellationToken cancellation);
     Task UploadMassTransactionsAsync(Guid userId, IEnumerable<CreateTransaction> request, CancellationToken cancellation);
+    Task<int> CountAsync(Guid userId,TransactionFilter? filter,CancellationToken cancellation);
 }

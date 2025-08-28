@@ -32,9 +32,9 @@ public class BudgetAnalyticService : IBudgetAnalyticService
             To = budget.Period.PeriodEnd,
         };
         var spent = await _transactionRepository.GetSpentAmountAsync(userId, filter, cancellation);
-        var days = (int)( DateTime.UtcNow - budget.Period.PeriodStart ).TotalDays;
+        var daysPast = (int)( DateTime.UtcNow - budget.Period.PeriodStart ).TotalDays;
         var remainingDays = (int)(budget.Period.PeriodEnd - DateTime.UtcNow).TotalDays;
-        var dailyAverage = remainingDays > 0 ? spent / days : spent;
+        var dailyAverage = remainingDays > 0 ? spent / daysPast : spent;
         var remainingAmount = budget.LimitAmount.Amount - spent;
         var willExceed = remainingAmount < dailyAverage * remainingDays;
         if (willExceed)

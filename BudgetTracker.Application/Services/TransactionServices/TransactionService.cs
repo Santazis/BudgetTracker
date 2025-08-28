@@ -100,5 +100,10 @@ public class TransactionService : ITransactionService
          await _unitOfWork.SaveChangesAsync(cancellation);
         }
     }
-    
+
+    public async Task<int> CountAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    {
+        var count = await _transactionRepository.CountAsync(userId, filter,cancellation);
+        return count;
+    }
 }
