@@ -6,7 +6,7 @@ namespace BudgetTracker.Application.Models.Transaction;
 
 public record TransactionDto(
     decimal Amount,
-    string Currency,
+    string Currency ,
     string? Description,
     DateTime CreatedAt,
     CategoryDto Category,

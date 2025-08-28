@@ -44,7 +44,7 @@ public class TransactionService : ITransactionService
             amount: Money.Create(request.Amount, request.Currency),
             categoryId: request.CategoryId,
             userId: userId,
-            createdAt:DateTime.UtcNow, 
+            createdAt:request.CreatedAt,
             paymentMethodId:request.PaymentMethodId,
             description: request.Description);
         await _transactionRepository.CreateAsync(transaction, cancellation);
@@ -100,5 +100,10 @@ public class TransactionService : ITransactionService
          await _unitOfWork.SaveChangesAsync(cancellation);
         }
     }
-    
+
+    public async Task<int> CountAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
+    {
+        var count = await _transactionRepository.CountAsync(userId, filter,cancellation);
+        return count;
+    }
 }

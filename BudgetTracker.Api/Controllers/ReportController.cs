@@ -24,7 +24,7 @@ public class ReportController : ControllerBase
         return Ok(await _summaryService.GetTopExpensesCategoriesInMonthAsync(UserId.Value, cancellation));
     }
     [HttpGet("comparison-month")]
-    public async Task<IActionResult> GetComparison(CancellationToken cancellation)
+    public async Task<IActionResult> GetComparisonAsync(CancellationToken cancellation)
     {
         if (UserId is null) return Unauthorized();
         return Ok(await _summaryService.GetMonthlySpendingComparisonAsync(UserId.Value, cancellation));

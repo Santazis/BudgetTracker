@@ -85,7 +85,7 @@ public class AuthService : IAuthService
         {
            return Result<LoginResponse>.Failure(authResponse.Error);
         }
-        return Result<LoginResponse>.Success(new LoginResponse(authResponse.Value,user.Email,user.IsEmailVerified));
+        return Result<LoginResponse>.Success(new LoginResponse(authResponse.Value.AccessToken,authResponse.Value.RefreshToken,user.Email,user.IsEmailVerified));
     }
 
 
@@ -118,7 +118,7 @@ public class AuthService : IAuthService
         }
         _authRepository.DeleteRefreshToken(refreshTokenEntity);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return authResponse;
+        return Result<AuthResponse>.Success(authResponse.Value);
     }
 
     public async Task<Result> LogoutAsync(Guid userId, Guid sessionId, CancellationToken cancellation)

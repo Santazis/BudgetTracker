@@ -7,4 +7,5 @@ public record CreateRecurringTransaction(
     decimal Amount,
     string Currency,
     string CronExpression,
+    DateTime RunDate,
     IEnumerable<Guid>? TagIds = null);

@@ -41,7 +41,6 @@ public class RecurringTransactionService : IRecurringTransactionService
     public async Task CreateRecurringTransactionAsync(CreateRecurringTransaction request, Guid userId,
         CancellationToken cancellation)
     {
-        var runDate = _cronScheduleCalculator.CalculateRunDate(request.CronExpression);
         var createdTransactions = new List<RecurringTransaction>();
         var bufferSize = 1000;
 
@@ -54,7 +53,7 @@ public class RecurringTransactionService : IRecurringTransactionService
                 amount: Money.Create(request.Amount, request.Currency),
                 paymentMethodId: request.PaymentMethodId,
                 cronExpression: request.CronExpression,
-                nextRun: runDate
+                nextRun: request.RunDate
             );
             createdTransactions.Add(transaction);
             if (createdTransactions.Count == bufferSize)

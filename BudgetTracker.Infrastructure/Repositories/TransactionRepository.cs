@@ -75,9 +75,11 @@ public class TransactionRepository : ITransactionRepository
             .AsAsyncEnumerable();
     }
 
-    public async Task<int> CountAsync(Guid userId, CancellationToken cancellation)
+    public async Task<int> CountAsync(Guid userId,TransactionFilter? filter, CancellationToken cancellation)
     {
-        var count = await _context.Transactions.Where(t => t.UserId == userId).CountAsync(cancellation);
+        var count = await _context.Transactions.Where(t => t.UserId == userId)
+            .Filter(filter)
+            .CountAsync(cancellation);
         return count;
     }
 
@@ -102,7 +104,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task<List<Transaction>> GetAllAsync(Guid userId, TransactionFilter? filter, CancellationToken cancellation)
     {
         var transactions =await _context.Transactions.AsNoTracking().Where(t => t.UserId == userId)
-            .Filter(filter).ToListAsync(cancellation);
+            .Filter(filter).Include(t=> t.Category).ToListAsync(cancellation);
         return transactions;
     }
 }
