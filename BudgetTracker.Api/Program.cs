@@ -13,6 +13,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +25,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-builder.Services.AddValidatorsFromAssembly(typeof(ApplicationByAssemblyReference).Assembly,includeInternalTypes:true);
+var otel = builder.Services.AddOpenTelemetry();
+otel.ConfigureResource(rec =>
+    rec.AddService(builder.Environment.ApplicationName));
+otel.WithMetrics(providerBuilder =>
+    providerBuilder.AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddNpgsqlInstrumentation()
+        .AddPrometheusExporter());
+otel.WithTracing(tracing =>
+    tracing.AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(opt => opt.Endpoint = new Uri("http://localhost:4317")));
+
+builder.Services.AddValidatorsFromAssembly(typeof(ApplicationByAssemblyReference).Assembly, includeInternalTypes: true);
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
@@ -32,30 +49,31 @@ builder.Services.AddHangfire(configuration => configuration
     }));
 
 builder.Services.AddHangfireServer();
+
 builder.Services.AddTransient<ExceptionMiddleware>();
 JwtSettings jwtSettings = new JwtSettings();
 builder.Services.AddSingleton(jwtSettings);
 
-builder.Configuration.Bind(nameof(JwtSettings),jwtSettings);
+builder.Configuration.Bind(nameof(JwtSettings), jwtSettings);
 builder.Services.AddAuthentication(options =>
 {
-  options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-  options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-  options.SaveToken = true;
-  options.RequireHttpsMetadata = true;
-  options.TokenValidationParameters = new TokenValidationParameters()
-  {
-    ValidateIssuerSigningKey = true,
-    ValidateIssuer = true,
-    ValidateAudience = true,
-    ValidateLifetime = true,
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.AccessTokenSecret)),
-    ValidIssuer = jwtSettings.Issuer,
-    ValidAudience = jwtSettings.Audience,
-    ClockSkew = TimeSpan.Zero,
-  };
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = true;
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.AccessTokenSecret)),
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        ClockSkew = TimeSpan.Zero,
+    };
 });
 builder.Services.AddDomainServices();
 builder.Services.AddRepositories();
@@ -102,6 +120,7 @@ if (app.Environment.IsDevelopment())
     app.UseHangfireDashboard();
 }
 
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 app.UseHttpsRedirection();
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseAuthorization();
