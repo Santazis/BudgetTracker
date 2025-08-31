@@ -29,7 +29,6 @@ public class UserService : IUserService
         {
             return Result<UserDto>.Failure(UserErrors.UserNotFound);
         }
-
         return Result<UserDto>.Success(UserDto.FromEntity(user));
     }
 
