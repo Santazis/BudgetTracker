@@ -53,7 +53,7 @@ public class AuthService : IAuthService
         return Result<RegisterResponse>.Success(registerResponse); 
     }
 
-    public async Task<Result<AuthResponse>> AuthAsync(Domain.Models.User.User user, CancellationToken cancellation)
+    public async Task<AuthResponse> AuthAsync(Domain.Models.User.User user, CancellationToken cancellation)
     {
         var refreshTokenId = Guid.NewGuid();
         var accessToken = _jwtAccessTokenService.GenerateAccessToken(user,refreshTokenId);
@@ -65,7 +65,7 @@ public class AuthService : IAuthService
         await _authRepository.RemoveUserExpiredRefreshTokensAsync(user.Id,cancellation);
         await _authRepository.AddRefreshToken(token,cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return Result<AuthResponse>.Success(new AuthResponse(accessToken,refreshToken));
+        return new AuthResponse(accessToken,refreshToken);
     }
 
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellation)
@@ -80,12 +80,8 @@ public class AuthService : IAuthService
         {
             return Result<LoginResponse>.Failure(AuthErrors.InvalidCredentials);
         }
-        Result<AuthResponse> authResponse = await AuthAsync(user,cancellation);
-        if (authResponse.IsFailure)
-        {
-           return Result<LoginResponse>.Failure(authResponse.Error);
-        }
-        return Result<LoginResponse>.Success(new LoginResponse(authResponse.Value.AccessToken,authResponse.Value.RefreshToken,user.Email,user.IsEmailVerified));
+        AuthResponse authResponse = await AuthAsync(user,cancellation);
+        return Result<LoginResponse>.Success(new LoginResponse(authResponse.AccessToken,authResponse.RefreshToken,user.Email,user.IsEmailVerified));
     }
 
 
@@ -107,19 +103,11 @@ public class AuthService : IAuthService
             return Result<AuthResponse>.Failure(AuthErrors.RefreshTokenNotFound);
         }
         var user = await _authRepository.GetByIdAsync(userGuid,cancellation);
-        if (user is null)
-        { return Result<AuthResponse>.Failure(UserErrors.UserNotFound);
-
-        }
         var authResponse = await AuthAsync(user,cancellation);
-        if (authResponse.IsFailure)
-        {
-            return Result<AuthResponse>.Failure(authResponse.Error);
-        }
         _authRepository.DeleteRefreshToken(refreshTokenEntity);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return Result<AuthResponse>.Success(authResponse.Value);
-    }
+        return Result<AuthResponse>.Success(authResponse);
+    }       
 
     public async Task<Result> LogoutAsync(Guid userId, Guid sessionId, CancellationToken cancellation)
     {

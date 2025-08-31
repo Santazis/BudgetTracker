@@ -13,6 +13,7 @@ public sealed class RefreshToken
     public bool Revoked { get;private set; }
     public DateTime Created { get;private set; }
     
+    private RefreshToken(){}
     public static RefreshToken Create(Guid userId,Guid tokenId, string token, DateTime expires)
     {
         var refreshToken = new RefreshToken()
