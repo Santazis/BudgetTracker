@@ -22,16 +22,15 @@ public class CategoryService : ICategoryService
     }
 
 
-    public async Task<CategoryDto> CreateAsync(CreateCategory request,Guid userId, CancellationToken cancellation)
+    public async Task<Result<CategoryDto>> CreateAsync(CreateCategory request,Guid userId, CancellationToken cancellation)
     {
         var category = Category.Create(
-            isSystem:false,
             name:request.Name,
             userId:userId,
             type:request.Type);
         await _categoryRepository.CreateAsync(category,cancellation);
         await _unitOfWork.SaveChangesAsync(cancellation);
-        return new CategoryDto(category.Name,category.Id,category.Type.ToString());
+        return Result<CategoryDto>.Success(new CategoryDto(category.Name,category.Id,category.Type.ToString()));
     }
 
     public async Task<IEnumerable<CategoryDto>> GetUserCategoriesAsync(Guid userId, CancellationToken cancellation)
@@ -60,7 +59,6 @@ public class CategoryService : ICategoryService
     {
         var category = await _categoryRepository.GetByIdAsync(categoryId,userId,cancellation);
         if (category is null) return Result<CategoryDto>.Failure(CategoryErrors.CategoryNotFound);
-        if (category.IsSystem) return Result<CategoryDto>.Failure(CategoryErrors.TryingUpdateSystemCategory);
         category.Update(request.Name,request.Type);
         await _unitOfWork.SaveChangesAsync(cancellation);
         return Result<CategoryDto>.Success(new CategoryDto(category.Name,category.Id,category.Type.ToString()));

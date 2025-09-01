@@ -2,6 +2,7 @@
 using BudgetTracker.Domain.Models.Budget;
 using BudgetTracker.Domain.Models.Category;
 using BudgetTracker.Domain.Models.RecurringTransaction;
+using BudgetTracker.Domain.Models.SavingGoal;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Models.User;
 using BudgetTracker.Infrastructure.Database.Configurations;
@@ -21,6 +22,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<TransactionTag> TransactionTags { get; set; }
     public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
     public DbSet<RecurringTransactionTag> RecurringTransactionTags { get; set; }
+    public DbSet<SavingGoal> SavingGoals { get; set; }
+    public DbSet<SavingGoalTransaction> SavingGoalTransactions { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
@@ -36,5 +39,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TransactionTagConfiguration());
         modelBuilder.ApplyConfiguration(new RecurringTransactionConfiguration());
         modelBuilder.ApplyConfiguration(new RecurringTransactionTagConfiguration());
+        modelBuilder.ApplyConfiguration(new SavingGoalConfiguration());
+        modelBuilder.ApplyConfiguration(new SavingGoalTransactionConfiguration());
     }
 }

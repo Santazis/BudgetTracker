@@ -13,68 +13,30 @@ namespace BudgetTracker.Application.Services;
 
 public class SummaryService : ISummaryService
 {
-    private readonly ITransactionRepository _transactionRepository;
     private readonly ISummaryRepository _summaryRepository;
-    private readonly ICategoryRepository _categoryRepository;
 
-    public SummaryService(ITransactionRepository transactionRepository, ISummaryRepository summaryRepository,
-        ICategoryRepository categoryRepository)
+    public SummaryService(ISummaryRepository summaryRepository)
     {
-        _transactionRepository = transactionRepository;
         _summaryRepository = summaryRepository;
-        _categoryRepository = categoryRepository;
     }
 
     public async Task<SummaryDto> GetSummaryAsync(Guid userId, TransactionFilter? filter,
         CancellationToken cancellation)
     {
-        var transactions = await _transactionRepository.GetAllAsync(userId, filter, cancellation);
-        if (transactions.Count == 0)
-        {
-            var money = Money.Create(0, "USD");
-            return new SummaryDto(
-                Total: money,
-                TotalIncome: money,
-                TotalExpense: money,
-                ByCategory: []);
-        }
-
-        var categories = new Dictionary<Guid, (Money total, CategoryDto category)>();
-        var totalIncome = Money.Create(0, "USD");
-        var totalExpense = Money.Create(0, "USD");
-        foreach (var transaction in transactions)
-        {
-            if (!categories.TryGetValue(transaction.CategoryId, out var category))
-            {
-                categories[transaction.CategoryId] = (transaction.Amount,
-                    new CategoryDto(transaction.Category.Name, transaction.Category.Id,
-                        transaction.Category.Type.ToString()));
-            }
-            else
-            {
-                categories[transaction.CategoryId] = (category.total + transaction.Amount, category.category);
-            }
-
-            if (transaction.Category.Type == CategoryTypes.Income)
-            {
-                totalIncome += transaction.Amount;
-            }
-            else
-            {
-                totalExpense += transaction.Amount;
-            }
-        }
-
+        var categoriesSpent = await _summaryRepository.GetSummaryAsync(userId,filter,cancellation);
+        var totalIncome = categoriesSpent.Where(c=> c.Key.Type == CategoryTypes.Income).Sum(c=> c.Value);
+        var totalExpense = categoriesSpent.Where(c=> c.Key.Type == CategoryTypes.Expense).Sum(c=> c.Value);
         var totalBalance = totalIncome - totalExpense;
-        var byCategory = categories.Values.Select(v => new CategorySummary(v.category, v.total))
-            .OrderBy(c => c.Category.Type)
-            .ToList();
+        var byCategory = categoriesSpent.Select(c => new CategorySummary(
+            new CategoryDto(c.Key.Name, c.Key.Id, c.Key.Type.ToString()),
+            Money.Create(c.Value,"Usd")));
         var summary = new SummaryDto(
-            Total: totalBalance,
-            TotalIncome: totalIncome,
-            TotalExpense: totalExpense,
+            Total: Money.Create(totalBalance,"USD"), 
+            TotalIncome: Money.Create(totalIncome, "USD"), 
+            TotalExpense: Money.Create(totalExpense,"USD"), 
             ByCategory: byCategory);
         return summary;
+       
     }
 
     public async Task<IEnumerable<CategorySummary>> GetTopExpensesCategoriesInMonthAsync(Guid userId,

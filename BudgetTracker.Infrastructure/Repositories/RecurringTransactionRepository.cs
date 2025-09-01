@@ -70,7 +70,7 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
             //Using tuple comparison for PostgresSql with indexed columns
             query = query.Where(t => EF.Functions.GreaterThan(
                 ValueTuple.Create(t.Id,t.NextRun ),
-                ValueTuple.Create(lastId,lastNextRun)) && t.NextRun >= now);
+                ValueTuple.Create(lastId,lastNextRun)) && t.NextRun >= now && t.NextRun < end);
         }
         else
         {
