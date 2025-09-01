@@ -1,7 +1,9 @@
-﻿using BudgetTracker.Domain.Models.Category;
+﻿using BudgetTracker.Application.Extensions.Filters;
+using BudgetTracker.Domain.Models.Category;
 using BudgetTracker.Domain.Models.Enums;
 using BudgetTracker.Domain.Models.Transaction;
 using BudgetTracker.Domain.Repositories;
+using BudgetTracker.Domain.Repositories.Filters;
 using BudgetTracker.Domain.Repositories.Models;
 using BudgetTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -62,4 +64,18 @@ public class SummaryRepository : ISummaryRepository
             .ToListAsync(cancellation);
         return categories;
     }
+
+    public async Task<Dictionary<Category,decimal>> GetSummaryAsync(Guid userId, TransactionFilter? filter,
+        CancellationToken cancellation)
+    {
+        var result = await _context.Transactions.AsNoTracking()
+            .Where(t=> t.UserId == userId)
+            .Include(t=> t.Category)
+            .Filter(filter)
+            .GroupBy(t=> t.Category)
+            .Select(g=> new {g.Key,Amount = g.Sum(t=> t.Amount.Amount)})
+            .ToDictionaryAsync(g=> g.Key, g=> g.Amount, cancellation);
+        return result;
+    }
+    
 }

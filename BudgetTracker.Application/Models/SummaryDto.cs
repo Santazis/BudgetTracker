@@ -7,4 +7,4 @@ public record SummaryDto(
     Money Total,
     Money TotalIncome,
     Money TotalExpense,
-    IReadOnlyList<CategorySummary> ByCategory);
+    IEnumerable<CategorySummary> ByCategory);

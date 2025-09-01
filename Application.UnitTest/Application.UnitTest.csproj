@@ -24,8 +24,4 @@
       <ProjectReference Include="..\BudgetTracker.Application\BudgetTracker.Application.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="User\" />
-    </ItemGroup>
-
 </Project>

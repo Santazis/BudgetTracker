@@ -7,7 +7,7 @@ using Domain.Models.Category;
 
 public interface ICategoryService
 {
-    Task<CategoryDto> CreateAsync(CreateCategory request,Guid userId,CancellationToken cancellation);
+    Task<Result<CategoryDto>> CreateAsync(CreateCategory request,Guid userId,CancellationToken cancellation);
     Task<IEnumerable<CategoryDto>> GetUserCategoriesAsync(Guid userId,CancellationToken cancellation);
     Task<Result<CategoryDto>> GetByIdAsync(Guid id,Guid userId,CancellationToken cancellation);
     Task<Result> DeleteAsync(Guid categoryId,Guid userId,CancellationToken cancellation);

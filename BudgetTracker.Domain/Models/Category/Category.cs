@@ -12,11 +12,11 @@ public sealed class Category : Entity
     public CategoryTypes Type { get; private set; }
     public Guid? UserId { get; private set; }
     public User.User? User { get; private set; }
-    public static Category Create(bool isSystem,Guid? userId, string name, CategoryTypes type)
+    public static Category Create(Guid userId, string name, CategoryTypes type)
     {
         return new Category(Guid.NewGuid())
         {
-            IsSystem = isSystem,
+            IsSystem = false,
             Name = name,
             CreatedAt = DateTime.UtcNow,
             Type = type,

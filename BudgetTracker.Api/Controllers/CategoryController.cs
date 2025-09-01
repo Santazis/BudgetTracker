@@ -36,7 +36,12 @@ public class CategoryController : ControllerBase
             return BadRequest(validate.ToDictionary());
         }
 
-        return Ok(await _categoryService.CreateAsync(request, UserId.Value, cancellation));
+        var result = await _categoryService.CreateAsync(request, UserId.Value, cancellation);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+        return Ok(result.Value);
     }
 
     [HttpGet]
