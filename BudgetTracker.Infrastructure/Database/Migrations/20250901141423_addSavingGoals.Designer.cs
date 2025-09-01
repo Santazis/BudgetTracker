@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BudgetTracker.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BudgetTracker.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250901141423_addSavingGoals")]
+    partial class addSavingGoals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,98 +194,6 @@ namespace BudgetTracker.Infrastructure.Database.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("RecurringTransactionTag", "public");
-                });
-
-            modelBuilder.Entity("BudgetTracker.Domain.Models.SavingGoal.SavingGoal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.ComplexProperty<Dictionary<string, object>>("Period", "BudgetTracker.Domain.Models.SavingGoal.SavingGoal.Period#BudgetPeriod", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<DateTime>("PeriodEnd")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("PeriodEnd");
-
-                            b1.Property<DateTime>("PeriodStart")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("PeriodStart");
-                        });
-
-                    b.ComplexProperty<Dictionary<string, object>>("TargetAmount", "BudgetTracker.Domain.Models.SavingGoal.SavingGoal.TargetAmount#Money", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("numeric")
-                                .HasColumnName("Amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("Currency");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SavingGoal", "public");
-                });
-
-            modelBuilder.Entity("BudgetTracker.Domain.Models.SavingGoal.SavingGoalTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Guid>("SavingGoalId")
-                        .HasColumnType("uuid");
-
-                    b.ComplexProperty<Dictionary<string, object>>("Amount", "BudgetTracker.Domain.Models.SavingGoal.SavingGoalTransaction.Amount#Money", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasColumnType("numeric")
-                                .HasColumnName("Amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("Currency");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SavingGoalId");
-
-                    b.ToTable("SavingGoalTransaction", "public");
                 });
 
             modelBuilder.Entity("BudgetTracker.Domain.Models.Transaction.Tag", b =>
@@ -558,28 +469,6 @@ namespace BudgetTracker.Infrastructure.Database.Migrations
                     b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("BudgetTracker.Domain.Models.SavingGoal.SavingGoal", b =>
-                {
-                    b.HasOne("BudgetTracker.Domain.Models.User.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BudgetTracker.Domain.Models.SavingGoal.SavingGoalTransaction", b =>
-                {
-                    b.HasOne("BudgetTracker.Domain.Models.SavingGoal.SavingGoal", "SavingGoal")
-                        .WithMany("Transactions")
-                        .HasForeignKey("SavingGoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SavingGoal");
-                });
-
             modelBuilder.Entity("BudgetTracker.Domain.Models.Transaction.Tag", b =>
                 {
                     b.HasOne("BudgetTracker.Domain.Models.User.User", "User")
@@ -660,11 +549,6 @@ namespace BudgetTracker.Infrastructure.Database.Migrations
             modelBuilder.Entity("BudgetTracker.Domain.Models.RecurringTransaction.RecurringTransaction", b =>
                 {
                     b.Navigation("RecurringTransactionTags");
-                });
-
-            modelBuilder.Entity("BudgetTracker.Domain.Models.SavingGoal.SavingGoal", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("BudgetTracker.Domain.Models.Transaction.Transaction", b =>
