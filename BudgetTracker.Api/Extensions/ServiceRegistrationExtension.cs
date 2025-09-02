@@ -41,6 +41,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISummaryRepository, SummaryRepository>();
         services.AddScoped<IRecurringTransactionRepository,RecurringTransactionRepository>();
+        services.AddScoped<ISavingGoalRepository,SavingGoalRepository>();
         return services;
     }
 
@@ -63,6 +64,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
         services.AddScoped<IRecurringTransactionProcessingService, RecurringTransactionProcessingService>();
         services.AddScoped<IBudgetAnalyticService, BudgetAnalyticService>();
+        services.AddScoped<ISavingGoalService, SavingGoalService>();
         return services;
     }
 

@@ -3,7 +3,8 @@
 namespace BudgetTracker.Application.Models.SavingGoal.Requests;
 
 public record CreateSavingGoal(
-    Money TargetAmount,
+    decimal TargetAmount,
+    string Currency,
     DateTime PeriodStart,
     DateTime PeriodEnd,
     string Name,
