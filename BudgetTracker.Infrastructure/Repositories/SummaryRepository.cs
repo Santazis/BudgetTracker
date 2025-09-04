@@ -39,6 +39,7 @@ public class SummaryRepository : ISummaryRepository
         // //     .ToListAsync(cancellation);
         // return transactions;
         var result =  _context.Transactions.AsNoTracking()
+            
             .Where(t => t.UserId == userId && t.Category.Type == CategoryTypes.Expense)
             .Where(t => t.CreatedAt >= from && t.CreatedAt <= to)
             .GroupBy(t => t.Category)
@@ -48,7 +49,8 @@ public class SummaryRepository : ISummaryRepository
                 Amount = g.Sum(t => t.Amount.Amount)
             })
             .OrderByDescending(g=> g.Amount)
-            .Take(5).Select(g=>new CategoryTotalAmount(g.Category,g.Amount)).ToListAsync(cancellation);
+            .Take(5).Select(g=>new CategoryTotalAmount(g.Category,g.Amount))
+            .ToListAsync(cancellation);
         return result;
     }
 

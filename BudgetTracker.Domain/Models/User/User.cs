@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using BudgetTracker.Domain.Models.Enums;
 
 namespace BudgetTracker.Domain.Models.User;
@@ -9,7 +10,8 @@ public sealed class User : Entity
     {
         _paymentMethods = new List<PaymentMethod>();
     }
-
+    
+    private User() {}
     public Name Name { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public string Username { get; private set; } = null!;
@@ -73,17 +75,20 @@ public sealed class User : Entity
 public sealed class Email : ValueObject
 {
     public string Value { get; }
+    
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Value;
     }
-
-    public Email(string email)
+    
+    public Email(string value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email);
-        if(!IsValidEmail(email)) throw new ArgumentException("Email is not valid");
-        Value = email;
+        ArgumentException.ThrowIfNullOrEmpty(value);
+        if(!IsValidEmail(value)) throw new ArgumentException("Email is not valid");
+        Value = value;
     }
+    
+    
     
      private static bool IsValidEmail(string value)
  {

@@ -1,4 +1,5 @@
 ﻿using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Interfaces.Redis;
 using BudgetTracker.Application.Models.User;
 using BudgetTracker.Application.Models.User.Requests;
 using BudgetTracker.Domain.Common;
@@ -14,22 +15,31 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITagRepository _tagRepository;
+    private readonly IRedisCacheService _redisCacheService;
 
-    public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, ITagRepository tagRepository)
+    public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, ITagRepository tagRepository, IRedisCacheService redisCacheService)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _tagRepository = tagRepository;
+        _redisCacheService = redisCacheService;
     }
 
     public async Task<Result<UserDto>> GetByIdAsync(Guid userId, CancellationToken cancellation)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellation);
-        if (user is null)
+        string key = $"user:{userId}";
+        var userDtoCache = await _redisCacheService.GetStringAsync<UserDto>(key);
+        if (userDtoCache is null)
         {
-            return Result<UserDto>.Failure(UserErrors.UserNotFound);
+            var user = await _userRepository.GetByIdAsync(userId, cancellation);
+            if (user is null)
+            {
+                return Result<UserDto>.Failure(UserErrors.UserNotFound);
+            }
+            userDtoCache = UserDto.FromEntity(user);
+            await _redisCacheService.SetStringAsync(key, userDtoCache);
         }
-        return Result<UserDto>.Success(UserDto.FromEntity(user));
+        return Result<UserDto>.Success(userDtoCache);
     }
 
     public async Task<Result> AddPaymentMethod(Guid userId, CreatePaymentMethod request, CancellationToken cancellation)

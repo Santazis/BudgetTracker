@@ -1,4 +1,5 @@
 ﻿using BudgetTracker.Application.Interfaces;
+using BudgetTracker.Application.Interfaces.Redis;
 using BudgetTracker.Application.Models;
 using BudgetTracker.Application.Models.Transaction.Requests;
 using BudgetTracker.Application.Models.User;
@@ -18,12 +19,14 @@ public class UserController : ControllerBase
     private readonly ITransactionImportService _transactionImportService;
     private readonly IValidator<CreatePaymentMethod> _createPaymentMethodValidator;
     private readonly IValidator<UpdatePaymentMethod> _updatePaymentMethodValidator;
-    public UserController(IUserService userService, ITransactionImportService transactionImportService, IValidator<CreatePaymentMethod> createPaymentMethodValidator, IValidator<UpdatePaymentMethod> updatePaymentMethodValidator)
+    private readonly IRedisCacheService _redisCacheService;
+    public UserController(IUserService userService, ITransactionImportService transactionImportService, IValidator<CreatePaymentMethod> createPaymentMethodValidator, IValidator<UpdatePaymentMethod> updatePaymentMethodValidator, IRedisCacheService redisCacheService)
     {
         _userService = userService;
         _transactionImportService = transactionImportService;
         _createPaymentMethodValidator = createPaymentMethodValidator;
         _updatePaymentMethodValidator = updatePaymentMethodValidator;
+        _redisCacheService = redisCacheService;
     }
 
     [HttpGet]
@@ -32,7 +35,7 @@ public class UserController : ControllerBase
     {
         if (UserId is null) return Unauthorized();
         var result = await _userService.GetByIdAsync(UserId.Value, cancellation);
-        if (result.IsFailure) return BadRequest(result.Error);
+        if (result.IsFailure) return BadRequest(result.Error); 
         return Ok(result.Value);
     }
 

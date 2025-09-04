@@ -3,6 +3,7 @@ using BudgetTracker.Application.Interfaces.Analytics;
 using BudgetTracker.Application.Interfaces.Auth;
 using BudgetTracker.Application.Interfaces.Category;
 using BudgetTracker.Application.Interfaces.Jwt;
+using BudgetTracker.Application.Interfaces.Redis;
 using BudgetTracker.Application.Services;
 using BudgetTracker.Application.Services.Analytics;
 using BudgetTracker.Application.Services.Auth;
@@ -15,6 +16,7 @@ using BudgetTracker.Infrastructure.BackgroundServices;
 using BudgetTracker.Infrastructure.Repositories;
 using BudgetTracker.Infrastructure.Services;
 using BudgetTracker.Infrastructure.Services.Jwt;
+using BudgetTracker.Infrastructure.Services.Redis;
 
 namespace BudgetTracker.Extensions;
 
@@ -65,6 +67,7 @@ public static class ServiceRegistrationExtension
         services.AddScoped<IRecurringTransactionProcessingService, RecurringTransactionProcessingService>();
         services.AddScoped<IBudgetAnalyticService, BudgetAnalyticService>();
         services.AddScoped<ISavingGoalService, SavingGoalService>();
+        services.AddScoped<IRedisCacheService, RedisCacheService>();
         return services;
     }
 

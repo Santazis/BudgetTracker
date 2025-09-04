@@ -17,6 +17,7 @@ using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddStackExchangeRedisCache(option =>
+{
+    option.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
 var otel = builder.Services.AddOpenTelemetry();
 otel.ConfigureResource(rec =>
@@ -45,8 +50,9 @@ builder.Services.AddHangfire(configuration => configuration
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(c =>
     {
-        c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("HangfireConnection"));
+        c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
     }));
+
 
 builder.Services.AddHangfireServer();
 
@@ -117,6 +123,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    // app.ApplyMigrations();
     app.UseHangfireDashboard();
 }
 
