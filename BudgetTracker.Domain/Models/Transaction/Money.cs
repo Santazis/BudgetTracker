@@ -1,16 +1,19 @@
-﻿namespace BudgetTracker.Domain.Models.Transaction;
+﻿using System.Text.Json.Serialization;
+
+namespace BudgetTracker.Domain.Models.Transaction;
 
 public sealed class Money : ValueObject
 {
-    public decimal Amount { get; }
-    public string Currency { get; }
+    public decimal Amount { get; private set; }
+    public string Currency { get; private set; }
 
+    private Money() {}
     private Money(decimal amount, string currency)
     {
         Amount = amount;
         Currency = currency;
     }
-
+    
     public static Money Create(decimal amount, string currency)
     {
         return new Money(amount, currency);

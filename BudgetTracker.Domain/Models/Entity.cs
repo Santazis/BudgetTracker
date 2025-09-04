@@ -1,8 +1,8 @@
 ﻿namespace BudgetTracker.Domain.Models;
 
-public abstract class Entity(Guid id) : IEquatable<Entity>
+public abstract class Entity : IEquatable<Entity>
 {
-    public Guid Id { get; private init; } = id;
+    public Guid Id { get; private init; }
     
     public bool Equals(Entity? other)
     {
@@ -11,6 +11,11 @@ public abstract class Entity(Guid id) : IEquatable<Entity>
         return other.Id == Id;
     }
 
+    protected Entity(Guid id)
+    {
+        Id = id;
+    }
+    protected Entity(){}
     public static bool operator ==(Entity? left, Entity? right)
     {
         return left is not null && right is not null && left.Equals(right);

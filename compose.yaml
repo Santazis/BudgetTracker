@@ -1,0 +1,29 @@
+﻿services:
+  budgettracker.api:
+    image: budgettracker.api
+    build:
+      context: .
+      dockerfile: BudgetTracker.Api/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+  
+#  database:
+#    image: postgres:latest
+#    container_name: budget-db
+#    environment:
+#      - POSTGRES_PASSWORD=4636
+#      - POSTGRES_USER=postgres
+#    volumes:
+#      - database:/var/lib/postgresql/data
+#    ports:
+#      - "5433:5432"
+#    
+#volumes:
+#  database:
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"

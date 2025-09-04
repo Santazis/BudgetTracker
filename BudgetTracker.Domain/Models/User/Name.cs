@@ -2,14 +2,16 @@
 
 public sealed class Name : ValueObject
 {
-    public string Firstname { get;  }
-    public string Lastname { get;  }
+    public string Firstname { get; private set; }
+    public string Lastname { get; private set; }
 
+    private Name() {}
     private Name(string firstname, string lastname)
     {
         Firstname = firstname;
         Lastname = lastname; 
     }
+    
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Firstname;
