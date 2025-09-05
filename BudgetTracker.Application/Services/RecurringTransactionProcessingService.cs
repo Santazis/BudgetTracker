@@ -119,13 +119,14 @@ public class BatchSaveResult
     private async Task<BatchSaveResult> SaveByBatchesAsync(List<Transaction> transactions,
         List<RecurringTransaction> recurringTransactions, CancellationToken cancellation)
     {
+        await using var dbTransaction = await _unitOfWork.BeginTransactionAsync(cancellation);
+
         try
         {
-            await _unitOfWork.BeginTransactionAsync(cancellation);
             await _transactionRepository.CreateRangeAsync(transactions, cancellation);
             _recurringTransactionRepository.UpdateRange(recurringTransactions);
             await _unitOfWork.SaveChangesAsync(cancellation);
-            await _unitOfWork.CommitTransactionAsync(cancellation);
+            await dbTransaction.CommitAsync(cancellation);
             
             _logger.LogDebug("Successfully saved batch with {TransactionCount} transactions", transactions.Count);
             
@@ -137,7 +138,7 @@ public class BatchSaveResult
         }
         catch (Exception e)
         {
-            await _unitOfWork.RollbackTransactionAsync(cancellation);
+            await dbTransaction.RollbackAsync(cancellation);
             _logger.LogError(e, "Failed to save batch with {TransactionCount} transactions", transactions.Count);
             Console.WriteLine(e);
             Console.WriteLine("Error count" + transactions.Count);

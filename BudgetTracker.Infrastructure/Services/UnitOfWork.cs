@@ -1,5 +1,8 @@
-﻿using BudgetTracker.Application.Interfaces;
+﻿using System.Data;
+using System.Data.Common;
+using BudgetTracker.Application.Interfaces;
 using BudgetTracker.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BudgetTracker.Infrastructure.Services;
 
@@ -17,9 +20,10 @@ public class UnitOfWork : IUnitOfWork
         return _context.SaveChangesAsync(cancellation);
     }
 
-    public Task BeginTransactionAsync(CancellationToken cancellation)
+    public async Task<DbTransaction> BeginTransactionAsync(CancellationToken cancellation)
     {
-        return _context.Database.BeginTransactionAsync(cancellation);
+        var transaction = await  _context.Database.BeginTransactionAsync(cancellation);
+        return transaction.GetDbTransaction();
     }
 
     public Task CommitTransactionAsync(CancellationToken cancellation)
